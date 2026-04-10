@@ -1,0 +1,34 @@
+{
+  "analysis_date": "2026-04-10 00:35:38",
+  "T_date": "2026-03-06",
+  "T_plus_1": "2026-03-09",
+  "T_plus_5": "2026-03-13",
+  "num_stocks_total": 300,
+  "num_stocks_with_score": 300,
+  "num_stocks_with_return": 300,
+  "spearman_correlation": 0.10601589173920391,
+  "spearman_p_value": 0.06669046576817622,
+  "pearson_correlation": 0.01818540803556741,
+  "pearson_p_value": 0.753755350546036,
+  "top5_hit_rate": 0.0,
+  "top5_score_stocks": [
+    "600023",
+    "601186",
+    "601018",
+    "601818",
+    "601668"
+  ],
+  "top5_return_stocks": [
+    "002709",
+    "605117",
+    "300274",
+    "002384",
+    "601868"
+  ],
+  "plot_paths": {
+    "scatter_plot": "/Users/sghwr/USELESS/vsc/CS_competition/baseline/THU-BDC2026/#myWorkfold/correlation_results/score_vs_return_scatter.png",
+    "rank_plot": "/Users/sghwr/USELESS/vsc/CS_competition/baseline/THU-BDC2026/#myWorkfold/correlation_results/ranking_comparison.png",
+    "bin_plot": "/Users/sghwr/USELESS/vsc/CS_competition/baseline/THU-BDC2026/#myWorkfold/correlation_results/bin_return_analysis.png",
+    "comparison_csv": "/Users/sghwr/USELESS/vsc/CS_competition/baseline/THU-BDC2026/#myWorkfold/correlation_results/top5_comparison.csv"
+  }
+}
