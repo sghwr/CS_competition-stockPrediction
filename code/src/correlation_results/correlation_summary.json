@@ -1,0 +1,34 @@
+{
+  "analysis_date": "2026-04-21 22:03:05",
+  "T_date": "2026-03-06",
+  "T_plus_1": "2026-03-09",
+  "T_plus_5": "2026-03-13",
+  "num_stocks_total": 300,
+  "num_stocks_with_score": 300,
+  "num_stocks_with_return": 300,
+  "spearman_correlation": 0.00500405782466869,
+  "spearman_p_value": 0.9312187705990372,
+  "pearson_correlation": -0.12496473969734911,
+  "pearson_p_value": 0.030471560248957866,
+  "top5_hit_rate": 0.0,
+  "top5_score_stocks": [
+    "601018",
+    "002049",
+    "600023",
+    "601059",
+    "000408"
+  ],
+  "top5_return_stocks": [
+    "605117",
+    "002384",
+    "601868",
+    "002709",
+    "300274"
+  ],
+  "plot_paths": {
+    "scatter_plot": "e:\\USELESS\\数据分析学习\\数分竞赛学习\\CS-competition\\code\\src\\correlation_results\\score_vs_return_scatter.png",
+    "rank_plot": "e:\\USELESS\\数据分析学习\\数分竞赛学习\\CS-competition\\code\\src\\correlation_results\\ranking_comparison.png",
+    "bin_plot": "e:\\USELESS\\数据分析学习\\数分竞赛学习\\CS-competition\\code\\src\\correlation_results\\bin_return_analysis.png",
+    "comparison_csv": "e:\\USELESS\\数据分析学习\\数分竞赛学习\\CS-competition\\code\\src\\correlation_results\\top5_comparison.csv"
+  }
+}
