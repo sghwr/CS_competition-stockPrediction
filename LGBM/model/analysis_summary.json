@@ -1,0 +1,52 @@
+{
+  "avg_hit_rate": 0.15714285714285717,
+  "avg_final_score": 0.028278888347147736,
+  "positive_days": 9,
+  "negative_days": 5,
+  "best_day": {
+    "date": "2025-02-07T00:00:00.000000000",
+    "num_stocks": 298,
+    "hit_rate": 0.4,
+    "pred_return_sum": 1111,
+    "max_return_sum": 1480,
+    "random_return_sum": 747.5,
+    "final_score": 0.4962457337883959,
+    "pred_top5_stocks": [
+      275,
+      91,
+      252,
+      129,
+      15
+    ],
+    "true_top5_stocks": [
+      107,
+      205,
+      91,
+      15,
+      276
+    ]
+  },
+  "worst_day": {
+    "date": "2025-02-17T00:00:00.000000000",
+    "num_stocks": 298,
+    "hit_rate": 0.0,
+    "pred_return_sum": 430,
+    "max_return_sum": 1480,
+    "random_return_sum": 747.5,
+    "final_score": -0.4334470989761092,
+    "pred_top5_stocks": [
+      167,
+      81,
+      275,
+      252,
+      71
+    ],
+    "true_top5_stocks": [
+      279,
+      278,
+      138,
+      131,
+      158
+    ]
+  }
+}
