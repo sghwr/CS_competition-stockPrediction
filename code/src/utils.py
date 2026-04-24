@@ -204,7 +204,8 @@ def engineer_features(df):
         feature_names.append(f'BETA{w}')
         
         # R-squared can be calculated as CORREL^2
-        time_period_series = pd.Series(range(w), index=close.index[:w])
+        n = min(w, len(close))
+        time_period_series = pd.Series(range(n), index=close.index[:n])
         rolling_corr = close.rolling(w).corr(time_period_series)
         rsquare = rolling_corr**2
         features.append(rsquare)
@@ -599,6 +600,7 @@ def create_ranking_dataset_vectorized(data, features, sequence_length, ranking_d
     targets = []
     relevance_scores = []
     stock_indices = []
+    sample_dates = []
 
     print("Step 3: 构建每日样本并计算 relevance...")
     grouped_by_date = window_df.groupby('date')
@@ -637,6 +639,7 @@ def create_ranking_dataset_vectorized(data, features, sequence_length, ranking_d
         targets.append(day_targets)
         relevance_scores.append(relevance)
         stock_indices.append(day_stocks)
+        sample_dates.append(str(date))
 
     print(f"成功创建 {len(sequences)} 个训练样本")
     if len(sequences) > 0:
@@ -648,4 +651,4 @@ def create_ranking_dataset_vectorized(data, features, sequence_length, ranking_d
     #     joblib.dump((sequences, targets, relevance_scores, stock_indices), ranking_data_path)
     #     print(f"数据集已保存到: {ranking_data_path}")
 
-    return sequences, targets, relevance_scores, stock_indices
+    return sequences, targets, relevance_scores, stock_indices, sample_dates

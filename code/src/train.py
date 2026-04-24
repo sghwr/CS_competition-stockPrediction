@@ -28,9 +28,9 @@ def set_seed(seed=42):
     os.environ['PYTHONHASHSEED'] = str(seed)
 
 feature_cloums_map = {
-    '39': ['instrument','开盘', '收盘', '最高', '最低', '成交量', '成交额', '振幅', '涨跌额', '换手率', '涨跌幅','sma_5', 'sma_20', 'ema_12', 'ema_26', 'rsi', 'macd', 'macd_signal', 'volume_change', 'obv','volume_ma_5', 'volume_ma_20', 'volume_ratio', 'kdj_k', 'kdj_d', 'kdj_j', 'boll_mid', 'boll_std', 'atr_14', 'ema_60', 'volatility_10', 'volatility_20', 'return_1', 'return_5', 'return_10',  'high_low_spread', 'open_close_spread', 'high_close_spread', 'low_close_spread'],
+    '39': ['开盘', '收盘', '最高', '最低', '成交量', '成交额', '振幅', '涨跌额', '换手率', '涨跌幅','sma_5', 'sma_20', 'ema_12', 'ema_26', 'rsi', 'macd', 'macd_signal', 'volume_change', 'obv','volume_ma_5', 'volume_ma_20', 'volume_ratio', 'kdj_k', 'kdj_d', 'kdj_j', 'boll_mid', 'boll_std', 'atr_14', 'ema_60', 'volatility_10', 'volatility_20', 'return_1', 'return_5', 'return_10',  'high_low_spread', 'open_close_spread', 'high_close_spread', 'low_close_spread'],
 
-    '158+39': ['instrument','开盘', '收盘', '最高', '最低', '成交量', '成交额', '振幅', '涨跌额', '换手率', '涨跌幅','KMID', 'KLEN', 'KMID2', 'KUP', 'KUP2', 'KLOW', 'KLOW2', 'KSFT', 'KSFT2', 'OPEN0', 'HIGH0', 'LOW0', 'VWAP0', 'ROC5', 'ROC10', 'ROC20', 'ROC30', 'ROC60', 'MA5', 'MA10', 'MA20', 'MA30', 'MA60', 'STD5', 'STD10', 'STD20', 'STD30', 'STD60', 'BETA5', 'BETA10', 'BETA20', 'BETA30', 'BETA60', 'RSQR5', 'RSQR10', 'RSQR20', 'RSQR30', 'RSQR60', 'RESI5', 'RESI10', 'RESI20', 'RESI30', 'RESI60', 'MAX5', 'MAX10', 'MAX20', 'MAX30', 'MAX60', 'MIN5', 'MIN10', 'MIN20', 'MIN30', 'MIN60', 'QTLU5', 'QTLU10', 'QTLU20', 'QTLU30', 'QTLU60', 'QTLD5', 'QTLD10', 'QTLD20', 'QTLD30', 'QTLD60', 'RANK5', 'RANK10', 'RANK20', 'RANK30', 'RANK60', 'RSV5', 'RSV10', 'RSV20', 'RSV30', 'RSV60', 'IMAX5', 'IMAX10', 'IMAX20', 'IMAX30', 'IMAX60', 'IMIN5', 'IMIN10', 'IMIN20', 'IMIN30', 'IMIN60', 'IMXD5', 'IMXD10', 'IMXD20', 'IMXD30', 'IMXD60', 'CORR5', 'CORR10', 'CORR20', 'CORR30', 'CORR60', 'CORD5', 'CORD10', 'CORD20', 'CORD30', 'CORD60', 'CNTP5', 'CNTP10', 'CNTP20', 'CNTP30', 'CNTP60', 'CNTN5', 'CNTN10', 'CNTN20', 'CNTN30', 'CNTN60', 'CNTD5', 'CNTD10', 'CNTD20', 'CNTD30', 'CNTD60', 'SUMP5', 'SUMP10', 'SUMP20', 'SUMP30', 'SUMP60', 'SUMN5', 'SUMN10', 'SUMN20', 'SUMN30', 'SUMN60', 'SUMD5', 'SUMD10', 'SUMD20', 'SUMD30', 'SUMD60', 'VMA5', 'VMA10', 'VMA20', 'VMA30', 'VMA60', 'VSTD5', 'VSTD10', 'VSTD20', 'VSTD30', 'VSTD60', 'WVMA5', 'WVMA10', 'WVMA20', 'WVMA30', 'WVMA60', 'VSUMP5', 'VSUMP10', 'VSUMP20', 'VSUMP30', 'VSUMP60', 'VSUMN5', 'VSUMN10', 'VSUMN20', 'VSUMN30', 'VSUMN60', 'VSUMD5', 'VSUMD10', 'VSUMD20', 'VSUMD30', 'VSUMD60','sma_5', 'sma_20', 'ema_12', 'ema_26', 'rsi', 'macd', 'macd_signal', 'volume_change', 'obv', 'volume_ma_5', 'volume_ma_20', 'volume_ratio', 'kdj_k', 'kdj_d', 'kdj_j', 'boll_mid', 'boll_std', 'atr_14', 'ema_60', 'volatility_10', 'volatility_20', 'return_1', 'return_5', 'return_10',  'high_low_spread', 'open_close_spread', 'high_close_spread', 'low_close_spread']
+    '158+39': ['开盘', '收盘', '最高', '最低', '成交量', '成交额', '振幅', '涨跌额', '换手率', '涨跌幅','KMID', 'KLEN', 'KMID2', 'KUP', 'KUP2', 'KLOW', 'KLOW2', 'KSFT', 'KSFT2', 'OPEN0', 'HIGH0', 'LOW0', 'VWAP0', 'ROC5', 'ROC10', 'ROC20', 'ROC30', 'ROC60', 'MA5', 'MA10', 'MA20', 'MA30', 'MA60', 'STD5', 'STD10', 'STD20', 'STD30', 'STD60', 'BETA5', 'BETA10', 'BETA20', 'BETA30', 'BETA60', 'RSQR5', 'RSQR10', 'RSQR20', 'RSQR30', 'RSQR60', 'RESI5', 'RESI10', 'RESI20', 'RESI30', 'RESI60', 'MAX5', 'MAX10', 'MAX20', 'MAX30', 'MAX60', 'MIN5', 'MIN10', 'MIN20', 'MIN30', 'MIN60', 'QTLU5', 'QTLU10', 'QTLU20', 'QTLU30', 'QTLU60', 'QTLD5', 'QTLD10', 'QTLD20', 'QTLD30', 'QTLD60', 'RANK5', 'RANK10', 'RANK20', 'RANK30', 'RANK60', 'RSV5', 'RSV10', 'RSV20', 'RSV30', 'RSV60', 'IMAX5', 'IMAX10', 'IMAX20', 'IMAX30', 'IMAX60', 'IMIN5', 'IMIN10', 'IMIN20', 'IMIN30', 'IMIN60', 'IMXD5', 'IMXD10', 'IMXD20', 'IMXD30', 'IMXD60', 'CORR5', 'CORR10', 'CORR20', 'CORR30', 'CORR60', 'CORD5', 'CORD10', 'CORD20', 'CORD30', 'CORD60', 'CNTP5', 'CNTP10', 'CNTP20', 'CNTP30', 'CNTP60', 'CNTN5', 'CNTN10', 'CNTN20', 'CNTN30', 'CNTN60', 'CNTD5', 'CNTD10', 'CNTD20', 'CNTD30', 'CNTD60', 'SUMP5', 'SUMP10', 'SUMP20', 'SUMP30', 'SUMP60', 'SUMN5', 'SUMN10', 'SUMN20', 'SUMN30', 'SUMN60', 'SUMD5', 'SUMD10', 'SUMD20', 'SUMD30', 'SUMD60', 'VMA5', 'VMA10', 'VMA20', 'VMA30', 'VMA60', 'VSTD5', 'VSTD10', 'VSTD20', 'VSTD30', 'VSTD60', 'WVMA5', 'WVMA10', 'WVMA20', 'WVMA30', 'WVMA60', 'VSUMP5', 'VSUMP10', 'VSUMP20', 'VSUMP30', 'VSUMP60', 'VSUMN5', 'VSUMN10', 'VSUMN20', 'VSUMN30', 'VSUMN60', 'VSUMD5', 'VSUMD10', 'VSUMD20', 'VSUMD30', 'VSUMD60','sma_5', 'sma_20', 'ema_12', 'ema_26', 'rsi', 'macd', 'macd_signal', 'volume_change', 'obv', 'volume_ma_5', 'volume_ma_20', 'volume_ratio', 'kdj_k', 'kdj_d', 'kdj_j', 'boll_mid', 'boll_std', 'atr_14', 'ema_60', 'volatility_10', 'volatility_20', 'return_1', 'return_5', 'return_10',  'high_low_spread', 'open_close_spread', 'high_close_spread', 'low_close_spread']
 }
 feature_engineer_func_map = {
     '39': engineer_features_39,
@@ -48,6 +48,23 @@ def _build_label_and_clean(processed, drop_small_open=True):
         processed = processed[processed['open_t1'] > 1e-4]
 
     processed['label'] = (processed['open_t5'] - processed['open_t1']) / (processed['open_t1'] + 1e-12)
+
+    # 自适应标签工程：截尾（winsorize）
+    winsorize = config.get('winsorize_range', None)
+    if winsorize is not None:
+        low, high = winsorize
+        processed['label'] = processed.groupby('股票代码')['label'].transform(
+            lambda x: x.clip(
+                lower=x.quantile(low) if len(x) > 1 else x.min(),
+                upper=x.quantile(high) if len(x) > 1 else x.max()
+            )
+        )
+
+    # 波动率标准化标签
+    if config.get('vol_normalize_labels', False) and 'volatility_20' in processed.columns:
+        vol = processed['volatility_20'].values
+        processed['label'] = processed['label'] / (vol + 1e-12)
+
     processed = processed.dropna(subset=['label'])
 
     processed.drop(columns=['open_t1', 'open_t5'], inplace=True)
@@ -235,22 +252,33 @@ def calculate_ranking_metrics(y_pred, y_true, masks, k=5):
 
 class RankingDataset(torch.utils.data.Dataset):
     """排序数据集类"""
-    def __init__(self, sequences, targets, relevance_scores, stock_indices):
+    def __init__(self, sequences, targets, relevance_scores, stock_indices,
+                 time_weights=None, prior_bias=None, market_states=None):
         self.sequences = sequences
         self.targets = targets
         self.relevance_scores = relevance_scores
         self.stock_indices = stock_indices
+        self.time_weights = time_weights
+        self.prior_bias = prior_bias
+        self.market_states = market_states
     
     def __len__(self):
         return len(self.sequences)
     
     def __getitem__(self, idx):
-        return {
+        item = {
             'sequences': torch.FloatTensor(self.sequences[idx]),  # [num_stocks, seq_len, features]
             'targets': torch.FloatTensor(self.targets[idx]),      # [num_stocks] 真实涨跌幅
             'relevance': torch.FloatTensor(self.relevance_scores[idx]),  # [num_stocks] 标准化收益率（原为排序标签）
-            'stock_indices': torch.LongTensor(self.stock_indices[idx])  # [num_stocks] 股票索引
+            'stock_indices': torch.LongTensor(self.stock_indices[idx]),  # [num_stocks] 股票索引
         }
+        if self.time_weights is not None:
+            item['time_weight'] = torch.tensor(self.time_weights[idx], dtype=torch.float32)
+        if self.prior_bias is not None:
+            item['prior_bias'] = torch.FloatTensor(self.prior_bias[idx])
+        if self.market_states is not None:
+            item['market_state'] = torch.FloatTensor(self.market_states[idx])
+        return item
 
 def collate_fn(batch):
     """自定义collate函数处理变长序列"""
@@ -258,6 +286,12 @@ def collate_fn(batch):
     targets = [item['targets'] for item in batch]
     relevance = [item['relevance'] for item in batch]
     stock_indices = [item['stock_indices'] for item in batch]
+    has_time_weight = 'time_weight' in batch[0]
+    has_prior_bias = 'prior_bias' in batch[0]
+    has_market_state = 'market_state' in batch[0]
+    time_weights = [item.get('time_weight') for item in batch] if has_time_weight else None
+    prior_biases = [item.get('prior_bias') for item in batch] if has_prior_bias else None
+    market_states = [item.get('market_state') for item in batch] if has_market_state else None
     
     # 找到最大股票数量
     max_stocks = max(seq.size(0) for seq in sequences)
@@ -269,7 +303,7 @@ def collate_fn(batch):
     padded_stock_indices = []
     masks = []
     
-    for seq, tgt, rel, stock_idx in zip(sequences, targets, relevance, stock_indices):
+    for i, (seq, tgt, rel, stock_idx) in enumerate(zip(sequences, targets, relevance, stock_indices)):
         num_stocks = seq.size(0)
         seq_len = seq.size(1)
         feature_dim = seq.size(2)
@@ -286,6 +320,11 @@ def collate_fn(batch):
             tgt = torch.cat([tgt, tgt_pad], dim=0)
             rel = torch.cat([rel, rel_pad], dim=0)
             stock_idx = torch.cat([stock_idx, stock_pad], dim=0)
+            
+            if has_prior_bias:
+                pb = prior_biases[i]
+                pb_pad = torch.zeros(pad_size)
+                prior_biases[i] = torch.cat([pb, pb_pad], dim=0)
         
         # 创建mask标记有效位置
         mask = torch.ones(max_stocks)
@@ -297,13 +336,21 @@ def collate_fn(batch):
         padded_stock_indices.append(stock_idx)
         masks.append(mask)
     
-    return {
+    result = {
         'sequences': torch.stack(padded_sequences),      # [batch, max_stocks, seq_len, features]
         'targets': torch.stack(padded_targets),          # [batch, max_stocks]
         'relevance': torch.stack(padded_relevance),      # [batch, max_stocks]
         'stock_indices': torch.stack(padded_stock_indices),  # [batch, max_stocks]
         'masks': torch.stack(masks)                      # [batch, max_stocks]
     }
+    if has_time_weight:
+        result['time_weights'] = torch.stack(time_weights)  # [batch]
+    if has_prior_bias:
+        result['prior_biases'] = torch.stack(prior_biases)  # [batch, max_stocks]
+    if has_market_state:
+        result['market_states'] = torch.stack(market_states)  # [batch, 5]
+    
+    return result
 
 # 排序训练函数
 def train_ranking_model(model, dataloader, criterion, optimizer, device, epoch, writer):
@@ -317,11 +364,20 @@ def train_ranking_model(model, dataloader, criterion, optimizer, device, epoch, 
         targets = batch['targets'].to(device)        # [batch, max_stocks] 真实涨跌幅
         relevance = batch['relevance'].to(device)    # [batch, max_stocks] 预处理的相关性得分
         masks = batch['masks'].to(device)            # [batch, max_stocks] 有效位置mask
+        prior_biases = batch.get('prior_biases', None)
+        time_weights = batch.get('time_weights', None)
+        market_states = batch.get('market_states', None)
+        if prior_biases is not None:
+            prior_biases = prior_biases.to(device)
+        if time_weights is not None:
+            time_weights = time_weights.to(device)
+        if market_states is not None:
+            market_states = market_states.to(device)
         
         optimizer.zero_grad()
         
-        # 模型预测
-        outputs = model(sequences)  # [batch, max_stocks] 预测分数
+        # 模型预测（可学习加权 MD-SRP 先验融合）
+        outputs = model(sequences, prior_bias=prior_biases, market_state=market_states)
         
         # 应用mask，只考虑有效股票
         masked_outputs = outputs * masks + (1 - masks) * (-1e9)  # 无效位置设为很小的值
@@ -349,10 +405,15 @@ def train_ranking_model(model, dataloader, criterion, optimizer, device, epoch, 
             if len(valid_pred) > 1:
                 # 直接使用预处理好的相关性得分，无需重新计算
                 loss = criterion(valid_pred.unsqueeze(0), valid_relevance.unsqueeze(0))
+                if time_weights is not None:
+                    loss = loss * time_weights[i]
                 batch_loss = batch_loss + loss if isinstance(batch_loss, torch.Tensor) else loss
         
         if batch_loss is not None:
-            batch_loss = batch_loss / batch_size
+            if time_weights is not None:
+                batch_loss = batch_loss / (time_weights.sum() + 1e-12)
+            else:
+                batch_loss = batch_loss / batch_size
             batch_loss.backward()
             if not config.get('drop_clip', True):
                 grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), config['max_grad_norm'])
@@ -394,9 +455,15 @@ def evaluate_ranking_model(model, dataloader, criterion, device, writer, epoch):
             sequences = batch['sequences'].to(device)
             targets = batch['targets'].to(device)
             masks = batch['masks'].to(device)
+            prior_biases = batch.get('prior_biases', None)
+            market_states = batch.get('market_states', None)
+            if prior_biases is not None:
+                prior_biases = prior_biases.to(device)
+            if market_states is not None:
+                market_states = market_states.to(device)
             
-            # 模型预测
-            outputs = model(sequences)
+            # 模型预测（可学习加权 MD-SRP 先验融合）
+            outputs = model(sequences, prior_bias=prior_biases, market_state=market_states)
             
             # 应用mask
             masked_outputs = outputs * masks + (1 - masks) * (-1e9)
@@ -553,7 +620,7 @@ def main():
     output_dir = config['output_dir']
     os.makedirs(output_dir,exist_ok=True)
     # 保存在output_dir中保存当前的配置文件，以便复现
-    data_path = config['data_path']
+    data_path = r"E:\USELESS\数据分析学习\数分竞赛学习\CS-competition\data"
     with open(os.path.join(output_dir, 'config.json'), 'w') as f:
         json.dump(config, f, indent=4, ensure_ascii=False)
     is_train = True
@@ -606,14 +673,14 @@ def main():
     print(f"市场标准化器已保存到: {market_normalizer_path}")
     
     # 4. 创建排序数据集
-    train_sequences, train_targets, train_relevance, train_stock_indices = create_ranking_dataset_vectorized(
+    train_sequences, train_targets, train_relevance, train_stock_indices, train_dates = create_ranking_dataset_vectorized(
         train_data,
         features,
         config['sequence_length'],
         ranking_data_path=config.get('train_ranking_data_path'),
         market_normalizer=market_normalizer
     )
-    val_sequences, val_targets, val_relevance, val_stock_indices = create_ranking_dataset_vectorized(
+    val_sequences, val_targets, val_relevance, val_stock_indices, val_dates = create_ranking_dataset_vectorized(
         val_data,
         features,
         config['sequence_length'],
@@ -624,10 +691,64 @@ def main():
 
     print(f"训练集样本数: {len(train_sequences)}")
     print(f"验证集样本数: {len(val_sequences)}")
-    
+
+    # 4.5 时间衰减权重
+    half_life = config.get('time_decay_half_life', 180)
+    latest_train = pd.to_datetime(max(train_dates))
+    train_time_weights = np.array([
+        np.exp(-(latest_train - pd.to_datetime(d)).days / half_life)
+        for d in train_dates
+    ], dtype=np.float32)
+    train_time_weights = train_time_weights / train_time_weights.mean()
+
+    # 4.6 MD-SRP 先验偏置
+    train_prior_biases = None
+    val_prior_biases = None
+    train_market_states = None
+    val_market_states = None
+    if config.get('use_mdrp', False):
+        from market_prior import MarketStateExtractor, IndustryPriorComputer
+        idx2stockid = {v: k for k, v in stockid2idx.items()}
+        prior_computer = IndustryPriorComputer(
+            industry_csv=os.path.join(config['data_path'], 'stock_industry.csv'),
+            stock_data_csv=os.path.join(config['data_path'], 'stock_data.csv'),
+            lookback=config.get('mdrp_lookback', 5)
+        )
+        train_prior_biases = []
+        for date, idx_list in zip(train_dates, train_stock_indices):
+            codes = [idx2stockid[i] for i in idx_list]
+            priors = prior_computer.get_prior_returns(date, codes)
+            train_prior_biases.append(priors)
+        val_prior_biases = []
+        for date, idx_list in zip(val_dates, val_stock_indices):
+            codes = [idx2stockid[i] for i in idx_list]
+            priors = prior_computer.get_prior_returns(date, codes)
+            val_prior_biases.append(priors)
+
+        # 可学习先验权重：提取每日期市场状态
+        state_extractor = MarketStateExtractor(
+            index_csv=os.path.join(config['data_path'], 'index_data.csv')
+        )
+        train_market_states = []
+        for date in train_dates:
+            onehot = state_extractor.get_state_onehot(date)
+            vol = state_extractor.get_volatility(date)
+            train_market_states.append(np.concatenate([onehot, [vol]]).astype(np.float32))
+        val_market_states = []
+        for date in val_dates:
+            onehot = state_extractor.get_state_onehot(date)
+            vol = state_extractor.get_volatility(date)
+            val_market_states.append(np.concatenate([onehot, [vol]]).astype(np.float32))
     # 5. 创建排序数据集和数据加载器
-    train_dataset = RankingDataset(train_sequences, train_targets, train_relevance, train_stock_indices)
-    val_dataset = RankingDataset(val_sequences, val_targets, val_relevance, val_stock_indices)
+    train_dataset = RankingDataset(
+        train_sequences, train_targets, train_relevance, train_stock_indices,
+        time_weights=train_time_weights, prior_bias=train_prior_biases,
+        market_states=train_market_states
+    )
+    val_dataset = RankingDataset(
+        val_sequences, val_targets, val_relevance, val_stock_indices,
+        prior_bias=val_prior_biases, market_states=val_market_states
+    )
     
     train_loader = DataLoader(
         train_dataset, 

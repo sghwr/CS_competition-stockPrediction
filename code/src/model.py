@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import math
+from market_prior import AdaptiveWeightNet
 
 # 位置编码模块
 class PositionalEncoding(nn.Module):
@@ -104,6 +105,9 @@ class StockTransformer(nn.Module):
         # 初始化权重
         self._init_weights()
         
+        # 可学习市场状态驱动先验权重网络
+        self.adaptive_net = AdaptiveWeightNet(input_dim=5, hidden_dim=8)
+        
     def _init_weights(self):
         """初始化模型权重"""
         for module in self.modules():
@@ -112,7 +116,7 @@ class StockTransformer(nn.Module):
                 if module.bias is not None:
                     nn.init.zeros_(module.bias)
     
-    def forward(self, src):
+    def forward(self, src, prior_bias=None, market_state=None):
         # src: [batch, num_stocks, seq_len, feature_dim]
         batch_size, num_stocks, seq_len, feature_dim = src.size()
         
@@ -146,6 +150,14 @@ class StockTransformer(nn.Module):
         
         # 重塑为最终输出格式
         output = scores.view(batch_size, num_stocks)  # [batch, num_stocks]
+        
+        # 可学习的 MD-SRP 先验融合：w * prior_bias
+        if prior_bias is not None and market_state is not None:
+            # market_state: [batch, 5] = [onehot(4), vol(1)]
+            state_onehot = market_state[:, :4]      # [batch, 4]
+            vol_scalar = market_state[:, 4]          # [batch]
+            w = self.adaptive_net(state_onehot, vol_scalar)  # [batch]
+            output = output + w.unsqueeze(-1) * prior_bias
         
         return output
 

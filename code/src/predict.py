@@ -10,18 +10,19 @@ from tqdm import tqdm
 from config import config
 from model import StockTransformer
 from utils import engineer_features_39, engineer_features_158plus39
+from portfolio import calibrate_weights
 
 
 feature_cloums_map = {
 	'39': [
-		'instrument', '开盘', '收盘', '最高', '最低', '成交量', '成交额', '振幅', '涨跌额', '换手率', '涨跌幅',
+		'开盘', '收盘', '最高', '最低', '成交量', '成交额', '振幅', '涨跌额', '换手率', '涨跌幅',
 		'sma_5', 'sma_20', 'ema_12', 'ema_26', 'rsi', 'macd', 'macd_signal', 'volume_change', 'obv',
 		'volume_ma_5', 'volume_ma_20', 'volume_ratio', 'kdj_k', 'kdj_d', 'kdj_j', 'boll_mid', 'boll_std',
 		'atr_14', 'ema_60', 'volatility_10', 'volatility_20', 'return_1', 'return_5', 'return_10',
 		'high_low_spread', 'open_close_spread', 'high_close_spread', 'low_close_spread'
 	],
 	'158+39': [
-		'instrument', '开盘', '收盘', '最高', '最低', '成交量', '成交额', '振幅', '涨跌额', '换手率', '涨跌幅',
+		'开盘', '收盘', '最高', '最低', '成交量', '成交额', '振幅', '涨跌额', '换手率', '涨跌幅',
 		'KMID', 'KLEN', 'KMID2', 'KUP', 'KUP2', 'KLOW', 'KLOW2', 'KSFT', 'KSFT2', 'OPEN0', 'HIGH0', 'LOW0',
 		'VWAP0', 'ROC5', 'ROC10', 'ROC20', 'ROC30', 'ROC60', 'MA5', 'MA10', 'MA20', 'MA30', 'MA60', 'STD5',
 		'STD10', 'STD20', 'STD30', 'STD60', 'BETA5', 'BETA10', 'BETA20', 'BETA30', 'BETA60', 'RSQR5', 'RSQR10',
@@ -94,7 +95,7 @@ def build_inference_sequences(data, features, sequence_length, stock_ids, latest
 
 
 def main():
-	data_file = os.path.join(config['data_path'], 'train.csv')
+	data_file = os.path.join(config['data_path'], 'data/train.csv')
 	model_path = os.path.join(config['output_dir'], 'best_model.pth')
 	scaler_path = os.path.join(config['output_dir'], 'scaler.pkl')
 	output_path = os.path.join('./output/', 'result.csv')
@@ -111,6 +112,7 @@ def main():
 
 	stock_ids = sorted(raw_df['股票代码'].unique())
 	stockid2idx = {sid: idx for idx, sid in enumerate(stock_ids)}
+	idx2stockid = {v: k for k, v in stockid2idx.items()}
 
 	processed, features = preprocess_predict_data(raw_df, stockid2idx)
 	processed[features] = processed[features].replace([np.inf, -np.inf], np.nan).fillna(0.0)
@@ -139,25 +141,55 @@ def main():
 	model.to(device)
 	model.eval()
 
+	# MD-SRP 先验偏置
+	prior_bias = None
+	market_state = None
+	if config.get('use_mdrp', False):
+		from market_prior import IndustryPriorComputer, MarketStateExtractor
+		prior_computer = IndustryPriorComputer(
+			industry_csv=os.path.join(config['data_path'], 'stock_industry.csv'),
+			stock_data_csv=os.path.join(config['data_path'], 'stock_data.csv'),
+			lookback=config.get('mdrp_lookback', 5),
+		)
+		date_str = latest_date.strftime('%Y-%m-%d')
+		prior_returns = prior_computer.get_prior_returns(date_str, sequence_stock_ids)
+		prior_bias = torch.from_numpy(prior_returns).float().to(device)
+
+		state_extractor = MarketStateExtractor(
+			index_csv=os.path.join(config['data_path'], 'index_data.csv')
+		)
+		onehot = state_extractor.get_state_onehot(date_str)
+		vol = state_extractor.get_volatility(date_str)
+		market_state = torch.from_numpy(
+			np.concatenate([onehot, [vol]]).astype(np.float32)
+		).float().to(device).unsqueeze(0)  # [1, 5]
+
 	with torch.no_grad():
 		x = torch.from_numpy(sequences_np).unsqueeze(0).to(device)  # [1, N, L, F]
-		scores = model(x).squeeze(0).detach().cpu().numpy()         # [N]
+		if prior_bias is not None:
+			prior_bias = prior_bias.unsqueeze(0)  # [1, N]
+		scores = model(x, prior_bias=prior_bias, market_state=market_state).squeeze(0).detach().cpu().numpy()  # [N]
 
 	order = np.argsort(scores)[::-1]
 	ranked_stock_ids = [sequence_stock_ids[i] for i in order]
+	ranked_scores = scores[order]
 
-	# 仅输出前5，权重固定 0.2
-	if len(ranked_stock_ids) < 5:
-		raise ValueError(f'可预测股票不足5只，当前仅有 {len(ranked_stock_ids)} 只')
-	top5 = ranked_stock_ids[:5]
+	top_k = 5
+	if len(ranked_stock_ids) < top_k:
+		raise ValueError(f'可预测股票不足{top_k}只，当前仅有 {len(ranked_stock_ids)} 只')
+	top5_ids = ranked_stock_ids[:top_k]
+	top5_weights = np.array([0.2] * top_k)
+
 	output_df = pd.DataFrame({
-		'stock_id': top5,
-		'weight': [0.2] * len(top5),
+		'stock_id': top5_ids,
+		'weight': top5_weights,
 	})
 	output_df.to_csv(output_path, index=False)
 
 	print(f'预测日期: {latest_date.date()}')
 	print(f'参与排序股票数: {len(ranked_stock_ids)}')
+	print(f'等权权重: {top5_weights}')
+	print(f'权重和: {sum(top5_weights):.4f}')
 	print(f'结果已写入: {output_path}')
 
 
