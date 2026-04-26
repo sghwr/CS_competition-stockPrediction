@@ -9,6 +9,7 @@ dependencies = [
     "baostock>=0.8.9",
     "docker>=7.1.0",
     "joblib>=1.5.2",
+    "lightgbm>=4.6.0",
     "pandas>=2.3.2",
     "scikit-learn>=1.7.2",
     "seaborn>=0.13.2",

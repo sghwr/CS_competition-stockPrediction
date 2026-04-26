@@ -1,0 +1,12 @@
+.venv
+.git
+.gitignore
+*.pyc
+__pycache__
+*.egg-info
+.eggs
+*.log
+*.tar
+*.zip
+.DS_Store
+Thumbs.db
