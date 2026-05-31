@@ -95,7 +95,7 @@ def _build_label_and_clean(processed, drop_small_open=True):
     processed.drop(columns=['open_t1', 'open_t5'], inplace=True)
     return processed
 
-def _preprocess_common(df, stockid2idx, desc, drop_small_open=True):
+def _preprocess_common(df, stockid2idx, desc, drop_small_open=True, features=FEATURE_COLUMNS_158PLUS39):
     df = df.copy()
     df = df.sort_values(['股票代码', '日期']).reset_index(drop=True)
 
@@ -115,15 +115,15 @@ def _preprocess_common(df, stockid2idx, desc, drop_small_open=True):
     processed['instrument'] = processed['instrument'].astype(np.int64)
 
     processed = _build_label_and_clean(processed, drop_small_open=drop_small_open)
-    return processed
+    return processed, features
 
-def preprocess_data(df, is_train=True, stockid2idx=None):
+def preprocess_data(df, is_train=True, stockid2idx=None, features=FEATURE_COLUMNS_158PLUS39):
     if not is_train:
-        return _preprocess_common(df, stockid2idx, desc="特征工程", drop_small_open=False)
-    return _preprocess_common(df, stockid2idx, desc="特征工程", drop_small_open=True)
+        return _preprocess_common(df, stockid2idx, desc="特征工程", drop_small_open=False, features=features)
+    return _preprocess_common(df, stockid2idx, desc="特征工程", drop_small_open=True, features=features)
 
-def preprocess_val_data(df, stockid2idx=None):
-    return _preprocess_common(df, stockid2idx, desc="验证集特征工程", drop_small_open=True)
+def preprocess_val_data(df, stockid2idx=None, features=FEATURE_COLUMNS_158PLUS39):
+    return _preprocess_common(df, stockid2idx, desc="验证集特征工程", drop_small_open=True, features=features)
 
 class WeightedRankingLoss(nn.Module):
     def __init__(self, temperature=1.0, k=5, weight_factor=2.0, pairwise_weight=1, base_weight=1.0):
