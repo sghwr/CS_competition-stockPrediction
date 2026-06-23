@@ -53,7 +53,7 @@ class Ensemble:
         nproc = min(8, mp.cpu_count())
         with mp.Pool(processes=nproc) as pool:
             from tqdm import tqdm
-            processed = list(tqdm(pool.imap(engineer_features_158plus39, groups), total=len(groups), desc='ensemble 特征工程'))
+            processed = list(tqdm(pool.imap_unordered(engineer_features_158plus39, groups), total=len(groups), desc='ensemble 特征工程'))
         processed = pd.concat(processed).reset_index(drop=True)
         processed['日期'] = pd.to_datetime(processed['日期'])
         return processed
@@ -113,8 +113,12 @@ class Ensemble:
         if scaler is not None:
             orig_shape = x.shape
             x_flat = x.reshape(-1, x.shape[-1])
+            x_flat = pd.DataFrame(x_flat, columns=features)
             x_flat = scaler.transform(x_flat)
-            x = x_flat.reshape(orig_shape)
+            if hasattr(x_flat, 'values'):
+                x = x_flat.values.reshape(orig_shape)
+            else:
+                x = x_flat.reshape(orig_shape)
 
         if self.cfg.get('use_mdrp', False):
             scores = self._tf_predict_with_mdrp(x, valid_ids, date)

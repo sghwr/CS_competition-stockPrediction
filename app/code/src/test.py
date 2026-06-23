@@ -90,7 +90,7 @@ def main():
     data_file = os.path.join(config['data_path'], 'train.csv')
     model_path = os.path.join(config['output_dir'], 'best_model.pth')
     scaler_path = os.path.join(config['output_dir'], 'scaler.pkl')
-    output_path = os.path.join('/app/output', 'result.csv')
+    output_path = os.path.join(os.path.dirname(config['output_dir']), 'output', 'result.csv')
 
     if not os.path.exists(model_path):
         raise FileNotFoundError(f'未找到模型文件: {model_path}')

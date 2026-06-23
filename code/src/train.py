@@ -620,7 +620,8 @@ def main():
     output_dir = config['output_dir']
     os.makedirs(output_dir,exist_ok=True)
     # 保存在output_dir中保存当前的配置文件，以便复现
-    data_path = r"E:\USELESS\数据分析学习\数分竞赛学习\CS-competition\data"
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    data_path = os.path.join(project_root, 'data')
     with open(os.path.join(output_dir, 'config.json'), 'w') as f:
         json.dump(config, f, indent=4, ensure_ascii=False)
     is_train = True

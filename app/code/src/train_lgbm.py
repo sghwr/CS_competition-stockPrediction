@@ -33,7 +33,6 @@ LGBM_CONFIG = {
     'verbosity': -1,
     'early_stopping_rounds': 50,
     'eval_metric': 'ndcg',
-    'output_dir': '/app/model',
 }
 
 FEATURE_COLUMNS = [
@@ -175,7 +174,7 @@ def train_lgbm():
     print("LGBM排序模型训练")
     print("=" * 60)
     
-    output_dir = LGBM_CONFIG['output_dir']
+    output_dir = config['output_dir']
     os.makedirs(output_dir, exist_ok=True)
     
     data_path = config['data_path']

@@ -6,7 +6,13 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
-from tensorboardX import SummaryWriter
+try:
+    from torch.utils.tensorboard import SummaryWriter
+except ImportError:
+    try:
+        from tensorboardX import SummaryWriter
+    except ImportError:
+        SummaryWriter = None
 import joblib
 import os
 import json
@@ -28,6 +34,7 @@ def set_seed(seed=42):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     os.environ['PYTHONHASHSEED'] = str(seed)
+    os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
 
 FEATURE_COLUMNS_158PLUS39 = [
     '开盘', '收盘', '最高', '最低', '成交量', '成交额', '振幅', '涨跌额', '换手率', '涨跌幅',
@@ -594,7 +601,8 @@ def main():
         shuffle=True, 
         collate_fn=collate_fn,
         num_workers=0,
-        pin_memory=False
+        pin_memory=False,
+        generator=torch.Generator().manual_seed(config.get('seed', 42))
     )
     
     val_loader = DataLoader(
@@ -603,7 +611,8 @@ def main():
         shuffle=False, 
         collate_fn=collate_fn,
         num_workers=0,
-        pin_memory=False
+        pin_memory=False,
+        generator=torch.Generator().manual_seed(config.get('seed', 42))
     )
     
     model = StockTransformer(input_dim=len(features), config=config, num_stocks=num_stocks)
@@ -656,7 +665,7 @@ def main():
         
         print(f"\n训练完成！最佳 epoch: {best_epoch}, 最佳 final score: {best_score:.4f}")
         with open(os.path.join(output_dir, 'final_score.txt'), 'w') as f:
-            f.write(f"Best epoch: {best_epoch}\nBest final_score: {best_score:.6f}\n")
+            f.write(f"Best epoch: {best_epoch}\nBest final_score: {best_score:.6f}\nRandom seed: {config.get('seed', 42)}\n")
 
         if writer:
             writer.close()

@@ -106,7 +106,7 @@ def engineer_features_39(df):
     df['obv'] = talib.OBV(close, volume)
 
     # Volume-related features
-    df['volume_change'] = volume.pct_change()
+    df['volume_change'] = volume.pct_change(fill_method=None)
     df['volume_ma_5'] = talib.SMA(volume, timeperiod=5)
     df['volume_ma_20'] = talib.SMA(volume, timeperiod=20)
     df['volume_ratio'] = df['volume_ma_5'] / df['volume_ma_20']
