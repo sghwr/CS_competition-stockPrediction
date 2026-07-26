@@ -9,7 +9,11 @@ wheels/
 # Virtual environments
 .venv
 
+# Trained model weights (regenerate by running train scripts)
+model/
 
+# Optional: ignore all output artifacts (regenerate by running inference)
+# output/
 
 .DS_Store
 
@@ -18,4 +22,7 @@ wheels/
 *.zip
 
 *.tar
+
+# Windows artifact
+nul
 

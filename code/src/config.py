@@ -1,42 +1,73 @@
 # 配置参数
 sequence_length = 60
 feature_num = '158+39'
+
+# ============================================================================
+# 数据划分 (Train/Val/Test) — 严格无重叠, 无空窗
+#   - Train: 训练 base models (Tree / Linear / Transformer), 10 年
+#   - Val:   验证, 12 月, 用于早停
+#           (Stack 训在 TRAIN, VAL 仅用于 OOS 评估)
+#   - Test:  终极 OOS, 6 月, 严格评估
+# 数据源: data/stock_data.csv (2015-01-05 ~ 2026-06-26, 300 股)
+# ============================================================================
+SPLITS = {
+    'train_start':  '2015-01-05',
+    'train_end':    '2024-12-31',  # Train 10 年
+    'val_start':    '2025-01-01',  # Val: 12 月 (1 年)
+    'val_end':      '2025-12-31',
+    'test_start':   '2026-01-01',  # Test: 终极 OOS (6 月)
+    'test_end':     '2026-06-26',
+}
+
 config = {
-    'sequence_length': sequence_length,   # 使用过去60个交易日的数据（排序任务可以用稍短的序列）
-    'd_model': 256,          # Transformer输入维度
-    'nhead': 4,             # 注意力头数量
-    'num_layers': 3,        # Transformer层数
-    'dim_feedforward': 512, # 前馈网络维度
-    'batch_size': 4,        # 排序任务batch_size可以小一些，因为每个batch包含更多股票
-    'num_epochs': 50,       # 排序任务可能需要更多epochs
-    'learning_rate': 1e-5,  # 稍微降低学习率
+    'sequence_length': sequence_length,
+    'd_model': 256,
+    'nhead': 4,
+    'num_layers': 3,
+    'dim_feedforward': 512,
+    'batch_size': 4,
+    'max_epochs': 50,             # Transformer 最大 epoch (实际由早停决定)
+    'early_stop_patience': 10,    # val_score 连续 N epoch 不提升则停止
+    'learning_rate': 1e-5,
     'dropout': 0.1,
     'feature_num': feature_num,
     'max_grad_norm': 5.0,
 
-    'pairwise_weight': 1, # 配对损失权重
-    'base_weight': 1.0, # 非top-k样本权重
-    'top5_weight': 2.0, # top-5样本权重（应大于base_weight）
+    'pairwise_weight': 1,
+    'base_weight': 1.0,
+    'top5_weight': 2.0,
 
-    'output_dir': f'./model/{sequence_length}_{feature_num}',
+    'output_dir': './model',
     'data_path': './',
-    'market_normalizer_thresholds': (-0.01, 0.01),  # 市场状态划分阈值
-    'temperature': 0.5,  # 损失函数温度参数
+    'temperature': 0.5,
 
-    # --- MD-SRP 配置 ---
-    'use_mdrp': True,                       # 是否启用 MD-SRP 模块
-    'industry_data_path': './data/stock_industry.csv',
-    'index_data_path': "./data/index_data.csv",
-    'num_industries': 28,                    # 申万一级行业数
-    'mdrp_lookback': 5,                      # 行业动量回溯窗口（交易日）
+    # --- 数据划分 (Train/Val/Test, 严格无重叠) ---
+    'train_start':  SPLITS['train_start'],
+    'train_end':    SPLITS['train_end'],
+    'val_start':    SPLITS['val_start'],
+    'val_end':      SPLITS['val_end'],
+    'test_start':   SPLITS['test_start'],
+    'test_end':     SPLITS['test_end'],
 
-    # --- 自适应标签工程 ---
-    'winsorize_range': (0.01, 0.99),         # 标签截尾范围（分位数）
-    'label_smoothing': 0.05,                 # 标签平滑系数
-    'time_decay_half_life': 180,             # 样本时间衰减半衰期（天）
-    'vol_normalize_labels': True,            # 是否用波动率标准化标签
-
-    # --- 动态组合 ---
-    'portfolio_temperature': 0.5,            # Softmax 温度参数
-    'max_weight_per_stock': 0.4,             # 单只股票最大权重
+    # --- 集成学习配置 ---
+    'use_integrated': False,
+    'integrated_output_dir': './output/integrated_v1',
+    # Branch 1: RawSequenceTransformer
+    'raw_features': ['开盘', '最高', '最低', '收盘', '成交量', '成交额', '换手率'],
+    'nhead_raw': 8,
+    'num_layers_raw': 3,
+    'dim_feedforward_raw': 512,
+    # Branch 2: LightGBM
+    'lgb_n_estimators': 500,
+    'lgb_learning_rate': 0.05,
+    'lgb_num_leaves': 63,
+    'lgb_max_depth': 8,
+    'lgb_min_data_in_leaf': 50,
+    'lgb_feature_fraction': 0.8,
+    'lgb_bagging_fraction': 0.8,
+    'lgb_bagging_freq': 5,
+    'lgb_lambdarank_truncation_level': 10,
+    # Ensemble
+    'ensemble_search_step': 0.05,
 }
+

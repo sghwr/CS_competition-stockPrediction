@@ -1,0 +1,61 @@
+{
+  "config": {
+    "top_k": 5,
+    "horizon": 5,
+    "selection": "industry_diversified",
+    "output": "output/integrated_v1/backtest",
+    "base_dir": null
+  },
+  "results": {
+    "final": {
+      "abs_return": 0.009133842077918489,
+      "excess_return": 0.007322487042489414,
+      "top5_ratio": 0.010280457472072369,
+      "ndcg5": 0.04291483005355564,
+      "n_windows": 109,
+      "cum_abs": 1.434538689179917,
+      "cum_excess": 1.061889633059999,
+      "cum_top5": 191965702.3897904,
+      "excess_win_rate": 0.6238532110091743
+    },
+    "transformer": {
+      "abs_return": 0.0007535853369739381,
+      "excess_return": -0.0010577696984551371,
+      "top5_ratio": -0.022714288819909282,
+      "ndcg5": 0.007970595619152828,
+      "n_windows": 109,
+      "cum_abs": 0.05492095068180469,
+      "cum_excess": -0.12937221073530203,
+      "cum_top5": 191965702.3897904,
+      "excess_win_rate": 0.5229357798165137
+    },
+    "tree": {
+      "abs_return": 0.008471618186954048,
+      "excess_return": 0.006660263151524972,
+      "top5_ratio": 0.003803636898900419,
+      "ndcg5": 0.03735335195658683,
+      "n_windows": 109,
+      "cum_abs": 1.2317091163959812,
+      "cum_excess": 0.896184764934653,
+      "cum_top5": 191965702.3897904,
+      "excess_win_rate": 0.5045871559633027
+    },
+    "linear_reversal_component": {
+      "abs_return": 0.002208899911972023,
+      "excess_return": 0.0003975448765429479,
+      "top5_ratio": -0.012286010981946868,
+      "ndcg5": 0.021497045261156443,
+      "n_windows": 109,
+      "cum_abs": 0.21587701780955304,
+      "cum_excess": 0.0005527368890918538,
+      "cum_top5": 191965702.3897904,
+      "excess_win_rate": 0.5137614678899083
+    }
+  },
+  "metrics_used": [
+    "abs_return",
+    "excess_return",
+    "top5_ratio",
+    "ndcg5"
+  ]
+}

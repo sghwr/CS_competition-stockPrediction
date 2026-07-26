@@ -21,28 +21,16 @@ def parse_args() -> argparse.Namespace:
 		help="输出目录，默认 data",
 	)
 	parser.add_argument(
-		"--train-start",
-		type=str,
-		default="2015-01-01",
-		help="训练集开始日期，默认 2024-01-02",
+		"--val-windows",
+		type=int,
+		default=60,
+		help="验证集滑动窗口数量（步长1），默认 60",
 	)
 	parser.add_argument(
-		"--train-end",
-		type=str,
-		default="2025-03-06",
-		help="训练集结束日期，默认 2026-03-06",
-	)
-	parser.add_argument(
-		"--test-start",
-		type=str,
-		default="2025-03-09",
-		help="测试集开始日期，默认 2026-03-09",
-	)
-	parser.add_argument(
-		"--test-end",
-		type=str,
-		default="2026-03-13",
-		help="测试集结束日期，默认 2026-03-13",
+		"--future-days",
+		type=int,
+		default=5,
+		help="标签需要的前向天数（T+1~T+future_days），默认 5",
 	)
 	return parser.parse_args()
 
@@ -83,10 +71,8 @@ def main() -> None:
 	output_dir = Path(args.output_dir)
 	output_dir.mkdir(parents=True, exist_ok=True)
 
-	train_start = _to_timestamp(args.train_start, "--train-start")
-	train_end = _to_timestamp(args.train_end, "--train-end")
-	test_start = _to_timestamp(args.test_start, "--test-start")
-	test_end = _to_timestamp(args.test_end, "--test-end")
+	val_windows = args.val_windows
+	future_days = args.future_days
 
 	df = pd.read_csv(input_path)
 	_validate_columns(df)
@@ -95,11 +81,36 @@ def main() -> None:
 	if df["日期"].isna().any():
 		bad_rows = int(df["日期"].isna().sum())
 		raise ValueError(f"原始数据中存在无法解析的日期，共 {bad_rows} 行")
-	source_min_date = df["日期"].min().date()
-	source_max_date = df["日期"].max().date()
 
-	train_df = _filter_by_date(df, train_start, train_end)
-	test_df = _filter_by_date(df, test_start, test_end)
+	# 获取所有交易日（去重排序）
+	all_dates = sorted(df["日期"].unique())
+	source_min_date = all_dates[0].date()
+	source_max_date = all_dates[-1].date()
+	n_trade_days = len(all_dates)
+
+	# 可作为窗口结束日的日期：需要之后有 future_days 个交易日
+	valid_window_dates = all_dates[: n_trade_days - future_days]
+	n_valid = len(valid_window_dates)
+
+	if val_windows > n_valid:
+		raise ValueError(
+			f"验证集窗口数 {val_windows} 超过可用窗口数 {n_valid}（总交易日 {n_trade_days} - 前向 {future_days} 天）"
+		)
+
+	# 验证集窗口结束日：最后 val_windows 个有效窗口日
+	val_window_end_dates = valid_window_dates[-val_windows:]
+	# 训练集窗口结束日：验证集之前的所有有效窗口日
+	train_last_window_date = valid_window_dates[-val_windows - 1]
+
+	# train.csv: 从数据起点到 train_last_window_date + future_days（包含标签上下文）
+	train_end = all_dates[all_dates.index(train_last_window_date) + future_days]
+	# test.csv: 验证集窗口需要 sequence_length-1 的历史上下文 + 窗口日 + future_days 前向
+	# 这里取验证集第一个窗口日往前 90 个交易日（足够 60 序列上下文），到最后一天
+	val_context_start_idx = max(0, all_dates.index(val_window_end_dates[0]) - 90)
+	val_context_start = all_dates[val_context_start_idx]
+
+	train_df = _filter_by_date(df, all_dates[0], train_end)
+	test_df = _filter_by_date(df, val_context_start, pd.Timestamp(source_max_date))
 
 	train_path = output_dir / "train.csv"
 	test_path = output_dir / "test.csv"
@@ -107,17 +118,16 @@ def main() -> None:
 	train_df.to_csv(train_path, index=False)
 	test_df.to_csv(test_path, index=False)
 
-	print(f"训练集: {train_path}，共 {len(train_df)} 行，股票数 {train_df['股票代码'].nunique()}")
-	print(f"测试集: {test_path}，共 {len(test_df)} 行，股票数 {test_df['股票代码'].nunique()}")
-	print(
-		f"训练集日期范围: {train_start.date()} ~ {train_end.date()} | "
-		f"测试集日期范围: {test_start.date()} ~ {test_end.date()}"
-	)
-	if train_df.empty or test_df.empty:
-		print(
-			"警告: 训练集或测试集为空，请检查日期范围是否与原始数据重叠。"
-		)
-		print(f"原始数据日期范围: {source_min_date} ~ {source_max_date}")
+	print(f"原始数据: {n_trade_days} 个交易日, {source_min_date} ~ {source_max_date}")
+	print(f"有效窗口日: {n_valid} 个（排除最后 {future_days} 天无前向标签）")
+	print(f"验证集: {val_windows} 个滑动窗口（步长1）")
+	print(f"  窗口结束日范围: {val_window_end_dates[0].date()} ~ {val_window_end_dates[-1].date()}")
+	print(f"训练集窗口结束日: ... ~ {train_last_window_date.date()}")
+	print()
+	print(f"train.csv: {len(train_df)} 行, {train_df['股票代码'].nunique()} 只股票, "
+		  f"{train_df['日期'].min()} ~ {train_df['日期'].max()}")
+	print(f"test.csv:  {len(test_df)} 行, {test_df['股票代码'].nunique()} 只股票, "
+		  f"{test_df['日期'].min()} ~ {test_df['日期'].max()}")
 
 
 if __name__ == "__main__":
