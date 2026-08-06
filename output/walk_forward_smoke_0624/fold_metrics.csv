@@ -1,0 +1,3 @@
+signal_date,buy_date,sell_date,portfolio_return,benchmark_return,excess_return,excess_win,ndcg5,variant,selection
+2026-06-24,2026-06-25,2026-07-01,-0.016479597606280566,0.004386408471882226,-0.02086600607816279,False,0.0,base,industry_diversified
+2026-06-24,2026-06-25,2026-07-01,-0.016479597606280566,0.004386408471882226,-0.02086600607816279,False,0.0,manual,industry_diversified

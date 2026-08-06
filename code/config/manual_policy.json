@@ -1,0 +1,44 @@
+{
+  "enabled": true,
+  "top_k": 5,
+  "gross_exposure": 1.0,
+  "max_single_weight": 0.2,
+  "max_per_industry": 2,
+  "min_industries": 1,
+  "industry_prior": {
+    "J68保险业": 0.01,
+    "B07石油和天然气开采业": 0.01,
+    "B11开采专业及辅助性活动": 0.006,
+    "J67资本市场服务": 0.003,
+    "C39计算机、通信和其他电子设备制造业": -0.004,
+    "C32有色金属冶炼和压延加工业": -0.008,
+    "B09有色金属矿采选业": -0.01,
+    "D44电力、热力生产和供应业": -0.003,
+    "C38电气机械和器材制造业": -0.003
+  },
+  "preferred_stocks": {
+    "601318": 0.006,
+    "601601": 0.004,
+    "601628": 0.003,
+    "600938": 0.006,
+    "601857": 0.004,
+    "600028": 0.003,
+    "600030": 0.003,
+    "601211": 0.003
+  },
+  "blocked_industries": [],
+  "blocked_stocks": [],
+  "leader_effect": {
+    "enabled": true,
+    "lookback_days": 5,
+    "top_leader_quantile": 0.8,
+    "bonus": 0.002,
+    "max_followers_per_industry": 2
+  },
+  "risk_filter": {
+    "avoid_extreme_5d_jump": true,
+    "extreme_5d_threshold": 0.12,
+    "volatility_penalty": 0.12,
+    "overheat_penalty": 0.08
+  }
+}

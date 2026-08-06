@@ -1,0 +1,76 @@
+{
+  "pure_topk_base": {
+    "n": 3,
+    "mean_return": -0.03210939919505989,
+    "mean_excess_return": -0.029533307807472608,
+    "excess_win_rate": 0.0,
+    "median_excess_return": -0.03225003969967551,
+    "worst_excess_return": -0.04361639612522196,
+    "cum_excess_return": -0.0862451599082883,
+    "mean_ndcg5": 0.04868944994756882
+  },
+  "pure_topk_manual": {
+    "n": 3,
+    "mean_return": -0.03210939919505989,
+    "mean_excess_return": -0.029533307807472608,
+    "excess_win_rate": 0.0,
+    "median_excess_return": -0.03225003969967551,
+    "worst_excess_return": -0.04361639612522196,
+    "cum_excess_return": -0.0862451599082883,
+    "mean_ndcg5": 0.04868944994756882
+  },
+  "industry_diversified_base": {
+    "n": 3,
+    "mean_return": -0.03611943323178704,
+    "mean_excess_return": -0.03354334184419976,
+    "excess_win_rate": 0.0,
+    "median_excess_return": -0.03211375234607106,
+    "worst_excess_return": -0.036583501550047096,
+    "cum_excess_return": -0.0972990139932961,
+    "mean_ndcg5": 0.0
+  },
+  "industry_diversified_manual": {
+    "n": 3,
+    "mean_return": -0.03210939919505989,
+    "mean_excess_return": -0.029533307807472608,
+    "excess_win_rate": 0.0,
+    "median_excess_return": -0.03225003969967551,
+    "worst_excess_return": -0.04361639612522196,
+    "cum_excess_return": -0.0862451599082883,
+    "mean_ndcg5": 0.04868944994756882
+  },
+  "single_base": {
+    "n": 3,
+    "mean_return": -0.05843020656961682,
+    "mean_excess_return": -0.05585411518202953,
+    "excess_win_rate": 0.0,
+    "median_excess_return": -0.0334171151818308,
+    "worst_excess_return": -0.10487305116542738,
+    "cum_excess_return": -0.16011232214207405,
+    "mean_ndcg5": 0.0
+  },
+  "single_manual": {
+    "n": 3,
+    "mean_return": -0.03210939919505989,
+    "mean_excess_return": -0.029533307807472608,
+    "excess_win_rate": 0.0,
+    "median_excess_return": -0.03225003969967551,
+    "worst_excess_return": -0.04361639612522196,
+    "cum_excess_return": -0.0862451599082883,
+    "mean_ndcg5": 0.04868944994756882
+  },
+  "config": {
+    "mode": "frozen_checkpoint_holdout_ablation",
+    "freeze_signal_date": "2026-07-01",
+    "frozen_checkpoint": "20260701",
+    "holdout_start_date": "2026-07-01",
+    "holdout_end_date": "2026-07-24",
+    "signal_dates": [
+      "2026-07-01",
+      "2026-07-08",
+      "2026-07-15"
+    ],
+    "horizon": 5,
+    "val_days": 21
+  }
+}

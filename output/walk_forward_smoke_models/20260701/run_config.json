@@ -1,0 +1,20 @@
+{
+  "split": {
+    "train_start": "2015-01-05",
+    "train_end": "2026-05-25",
+    "val_start": "2026-05-26",
+    "val_end": "2026-06-24",
+    "test_start": "2026-07-01",
+    "test_end": "2026-07-01",
+    "signal_date": "2026-07-01",
+    "train_label_end": "2026-06-24",
+    "buy_date": "2026-07-02",
+    "sell_date": "2026-07-08"
+  },
+  "output_dir": "output\\walk_forward_smoke_models\\20260701",
+  "model_dir": "model\\walk_forward_smoke_models\\20260701",
+  "smoke": true,
+  "seeds": [
+    42
+  ]
+}

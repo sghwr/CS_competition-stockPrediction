@@ -1,0 +1,32 @@
+{
+  "base": {
+    "n": 1,
+    "mean_return": -0.016479597606280566,
+    "mean_excess_return": -0.02086600607816279,
+    "excess_win_rate": 0.0,
+    "median_excess_return": -0.02086600607816279,
+    "worst_excess_return": -0.02086600607816279,
+    "cum_excess_return": -0.020866006078162802,
+    "mean_ndcg5": 0.0
+  },
+  "manual": {
+    "n": 1,
+    "mean_return": -0.016479597606280566,
+    "mean_excess_return": -0.02086600607816279,
+    "excess_win_rate": 0.0,
+    "median_excess_return": -0.02086600607816279,
+    "worst_excess_return": -0.02086600607816279,
+    "cum_excess_return": -0.020866006078162802,
+    "mean_ndcg5": 0.0
+  },
+  "config": {
+    "start_date": "2026-06-24",
+    "end_date": "2026-06-26",
+    "selection": "industry_diversified",
+    "horizon": 5,
+    "val_days": 21,
+    "folds": [
+      "2026-06-24"
+    ]
+  }
+}

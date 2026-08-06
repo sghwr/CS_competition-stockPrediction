@@ -1,0 +1,13 @@
+{
+  "buy_date": "2026-08-03",
+  "created_at_utc": "2026-08-02T06:17:17.475637+00:00",
+  "manifest_sha256": "3b0345393fc28b2f443d6268eb269b060e9598e2402c0ecb3531459c65abf237",
+  "mode": "predict",
+  "news_cutoff": "2026-08-02T13:40:52+08:00",
+  "policy_sha256": "5a5d301905f569111012f2b5e2ce6d2b04fa0871fa424f993425d9209de72636",
+  "resolved_news_cutoff": "2026-08-02T13:40:52+08:00",
+  "schema_version": 1,
+  "sell_date": "2026-08-07",
+  "signal_date": "2026-07-31",
+  "status": "frozen"
+}

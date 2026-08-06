@@ -43,6 +43,7 @@ from config import config
 from model import LinearRegressionModel
 from industry_mapping import load_industry_map
 from paths import INTEGRATED_DIR, MODEL_INTEGRATED_DIR, TRAIN_CSV
+from split_overrides import add_split_arguments, apply_split_overrides
 
 # LinearRegression 10 维**反转** features (mean reversion)
 # 数据集分析结论: A 股 5d 持有期是反转市场, 动量延续不成立
@@ -146,13 +147,17 @@ def main():
     parser.add_argument('--weight_decay', type=float, default=1e-2, help='L2 regularization (Ridge-like, 加大防发散)')
     parser.add_argument('--seeds', type=int, nargs='+', default=[42, 123, 7])
     parser.add_argument('--smoke', action='store_true')
+    parser.add_argument('--final-refit', action='store_true')
+    add_split_arguments(parser)
     args = parser.parse_args()
+    split_cfg = apply_split_overrides(args, config)
     os.makedirs(args.model_dir, exist_ok=True)
     os.makedirs(args.output_dir, exist_ok=True)
     print(f"\n{'=' * 80}\n>>> [LinearRegression] starting (10 dim 反转 features)\n", flush=True)
     print(f"[Config] model_dir={args.model_dir}", flush=True)
     print(f"[Config] output_dir={args.output_dir}, epochs={args.epochs}, lr={args.lr}, "
           f"weight_decay={args.weight_decay}, seeds={args.seeds}, smoke={args.smoke}", flush=True)
+    print(f"[Config] split={split_cfg}", flush=True)
 
     # 1. Load data
     print("\n[Data] loading stock_data.csv ...", flush=True)
@@ -195,31 +200,45 @@ def main():
           flush=True)
 
     # 6. Train/val/test split (3 段)
+    train_start = pd.Timestamp(config['train_start'])
+    train_end = pd.Timestamp(config['train_end'])
     val_start = pd.Timestamp(config['val_start'])
     val_end = pd.Timestamp(config['val_end'])
     test_start = pd.Timestamp(config['test_start'])
     test_end = pd.Timestamp(config['test_end'])
-    train_mask = processed['日期'] < val_start
+    train_mask = (processed['日期'] >= train_start) & (processed['日期'] <= train_end)
     val_mask = (processed['日期'] >= val_start) & (processed['日期'] <= val_end)
     test_mask = (processed['日期'] >= test_start) & (processed['日期'] <= test_end)
     print(f"[Split] train={train_mask.sum():,}, val={val_mask.sum():,}, "
           f"test={test_mask.sum():,}", flush=True)
 
     # 7. Build tensors
-    X_train = processed.loc[train_mask, feature_cols].values.astype(np.float32)
+    X_train_raw = processed.loc[train_mask, feature_cols].values.astype(np.float32)
     y_train = processed.loc[train_mask, 'label'].values.astype(np.float32)
-    X_val = processed.loc[val_mask, feature_cols].values.astype(np.float32)
+    X_val_raw = processed.loc[val_mask, feature_cols].values.astype(np.float32)
     y_val = processed.loc[val_mask, 'label'].values.astype(np.float32)
-    X_test = processed.loc[test_mask, feature_cols].values.astype(np.float32)
+    X_test_raw = processed.loc[test_mask, feature_cols].values.astype(np.float32)
     y_test = processed.loc[test_mask, 'label'].values.astype(np.float32)
-    print(f"[Tensors] X_train={X_train.shape}, X_val={X_val.shape}, X_test={X_test.shape}", flush=True)
+    print(f"[Tensors] X_train={X_train_raw.shape}, X_val={X_val_raw.shape}, X_test={X_test_raw.shape}", flush=True)
 
     # 8. Standardize
     scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_val = scaler.transform(X_val)
+    X_train = scaler.fit_transform(X_train_raw)
+    X_val = scaler.transform(X_val_raw)
+    X_test = scaler.transform(X_test_raw) if len(X_test_raw) else X_test_raw
+    if args.final_refit:
+        X_refit_raw = np.concatenate([X_train_raw, X_val_raw], axis=0)
+        y_refit = np.concatenate([y_train, y_val], axis=0)
+        refit_scaler = StandardScaler()
+        X_refit = refit_scaler.fit_transform(X_refit_raw)
+        X_train_refit = refit_scaler.transform(X_train_raw)
+        X_val_refit = refit_scaler.transform(X_val_raw)
+        X_test_refit = refit_scaler.transform(X_test_raw) if len(X_test_raw) else X_test_raw
+        scaler_to_save = refit_scaler
+    else:
+        scaler_to_save = scaler
     import joblib
-    joblib.dump(scaler, os.path.join(args.output_dir, 'scaler.pkl'))
+    joblib.dump(scaler_to_save, os.path.join(args.output_dir, 'scaler.pkl'))
     joblib.dump(feature_cols, os.path.join(args.output_dir, 'feature_names.pkl'))
 
     # 9. Load val_meta for OOF reshape
@@ -281,6 +300,7 @@ def main():
         B = 4096
         best_val_loss = float('inf')
         best_state = None
+        best_epoch = 0
         for epoch in range(args.epochs):
             t0 = time.time()
             model.train()
@@ -312,16 +332,60 @@ def main():
 
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
+                best_epoch = epoch + 1
                 best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
                 torch.save(best_state, os.path.join(args.model_dir, f'best_seed{seed}.pth'))
+
+        if args.final_refit:
+            refit_epochs = max(1, best_epoch)
+            set_seed(seed)
+            model = LinearRegressionModel(n_features=len(feature_cols), output_clip=0.3).to(device)
+            optimizer = torch.optim.AdamW(
+                model.parameters(), lr=args.lr, weight_decay=args.weight_decay,
+            )
+            X_refit_t = torch.from_numpy(X_refit).float().to(device)
+            y_refit_t = torch.from_numpy(y_refit).float().to(device)
+            print(
+                f"[seed={seed}] final refit on train+val: "
+                f"{len(X_refit_t):,} samples, epochs={refit_epochs}",
+                flush=True,
+            )
+            for refit_epoch in range(refit_epochs):
+                model.train()
+                perm = torch.randperm(len(X_refit_t), device=device)
+                tr_loss = 0.0
+                n_batch = 0
+                for i in range(0, len(perm), B):
+                    idx = perm[i:i + B]
+                    pred = model(X_refit_t[idx])
+                    loss = huber(pred, y_refit_t[idx])
+                    optimizer.zero_grad()
+                    loss.backward()
+                    optimizer.step()
+                    tr_loss += loss.item()
+                    n_batch += 1
+                print(
+                    f"[seed={seed} refit={refit_epoch + 1}/{refit_epochs}] "
+                    f"Huber={tr_loss / max(n_batch, 1):.5f}",
+                    flush=True,
+                )
+            best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+            torch.save(best_state, os.path.join(args.model_dir, f'best_seed{seed}.pth'))
+            infer_train_t = torch.from_numpy(X_train_refit).float().to(device)
+            infer_val_t = torch.from_numpy(X_val_refit).float().to(device)
+            infer_test_t = torch.from_numpy(X_test_refit).float().to(device)
+        else:
+            infer_train_t = X_train_t
+            infer_val_t = X_val_t
+            infer_test_t = X_test_t
 
         # 11. OOF on val + train + test
         model.load_state_dict(best_state)
         model.eval()
         with torch.no_grad():
-            train_pred_all = model(X_train_t).cpu().numpy()
-            val_pred_all = model(X_val_t).cpu().numpy()
-            test_pred_all = model(X_test_t).cpu().numpy()
+            train_pred_all = model(infer_train_t).cpu().numpy()
+            val_pred_all = model(infer_val_t).cpu().numpy()
+            test_pred_all = model(infer_test_t).cpu().numpy()
 
         # Common stock index for all OOFs
         all_stocks_full = sorted(pd.read_csv(TRAIN_CSV, encoding='utf-8-sig',

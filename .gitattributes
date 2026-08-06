@@ -1,0 +1,7 @@
+pdf_pages/vendor/pypdfium2_raw/pdfium.dll filter=lfs diff=lfs merge=lfs -text
+data/stock_data.csv filter=lfs diff=lfs merge=lfs -text
+model/**/*.pth filter=lfs diff=lfs merge=lfs -text
+model/**/*.pkl filter=lfs diff=lfs merge=lfs -text
+output/**/*.npy filter=lfs diff=lfs merge=lfs -text
+output/**/*.npz filter=lfs diff=lfs merge=lfs -text
+output/**/*.pkl filter=lfs diff=lfs merge=lfs -text

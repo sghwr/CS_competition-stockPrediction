@@ -1,0 +1,13 @@
+{
+  "status": "ok",
+  "required_through": "2026-07-31",
+  "stock_rows": 741252,
+  "stock_count": 300,
+  "stock_latest": "2026-07-31",
+  "index_rows": 1838,
+  "index_latest": "2026-07-31",
+  "duplicate_stock_keys": 0,
+  "duplicate_index_dates": 0,
+  "errors": [],
+  "warnings": []
+}

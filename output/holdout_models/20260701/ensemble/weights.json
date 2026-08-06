@@ -1,0 +1,66 @@
+{
+  "method": "v1.0_8models_regime_specific_explicit_strategy",
+  "architecture": "Macro (1) + Tree (3 regime-specific) + Linear (1) + Stack (3 regime-specific, 显式策略) = 8 models",
+  "stack_features_per_regime": {
+    "bear": [
+      "tree_pred",
+      "linear_pred",
+      "macro_industry_bias",
+      "industry_id",
+      "reversal_score",
+      "low_beta_score"
+    ],
+    "sideways": [
+      "tree_pred",
+      "linear_pred",
+      "macro_industry_bias",
+      "industry_id",
+      "macro_industry_beta"
+    ],
+    "bull": [
+      "tree_pred",
+      "linear_pred",
+      "macro_industry_bias",
+      "industry_id",
+      "reversal_score",
+      "low_beta_score"
+    ]
+  },
+  "regime_strategies": {
+    "bear": [
+      "reversal_score",
+      "low_beta_score"
+    ],
+    "sideways": [
+      "macro_industry_beta"
+    ],
+    "bull": [
+      "reversal_score",
+      "low_beta_score"
+    ]
+  },
+  "regime_distribution": {
+    "train": {
+      "2": 873,
+      "1": 1241,
+      "0": 592
+    },
+    "val": {
+      "1": 10,
+      "0": 6,
+      "2": 5
+    },
+    "test": {
+      "1": 1
+    }
+  },
+  "train_ic": 0.10193398217977581,
+  "val_ic": -0.028385519464195645,
+  "test_ic": -0.18475019096925707,
+  "per_component_test_ic": {
+    "routed_tree": -0.23655159609050175,
+    "linear": -0.3926798273358236,
+    "macro": -0.13231503319286347
+  },
+  "splits": "2015-01-05 ~ 2026-05-25 (train 10 年), 2026-05-26 ~ 2026-06-24 (val 6 月), 2026-07-01 ~ 2026-07-01 (test 6 月)"
+}

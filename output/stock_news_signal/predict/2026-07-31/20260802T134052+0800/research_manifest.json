@@ -1,0 +1,64 @@
+{
+  "queries": [
+    "site:stats.gov.cn 2026年7月31日 采购经理指数 7月 PMI",
+    "site:gov.cn 2026年7月31日 中国 经济 政策 国务院",
+    "site:pbc.gov.cn 2026年7月31日 公告 货币政策",
+    "site:ndrc.gov.cn 2026年7月31日 产业 政策",
+    "site:miit.gov.cn 2026年7月31日 工业 政策",
+    "site:csrc.gov.cn 2026年7月31日 资本市场",
+    "site:sse.com.cn 2026-07-31 上市公司 公告",
+    "site:szse.cn 2026-07-31 上市公司 公告",
+    "2026年7月31日 中国制造业采购经理指数 官方",
+    "2026年7月31日 国务院 常务会议 经济 官方",
+    "2026年7月31日 中国人民银行 公告 官方",
+    "2026年7月31日 工业和信息化部 政策 官方",
+    "2026年7月中国采购经理指数运行情况",
+    "金融监管总局 中国人民银行 中国证监会 财政部关于健全金融机构治理的实施意见",
+    "中国人民银行等九部门联合印发《关于加强科技金融领域数据开发利用的通知》"
+  ],
+  "items": [
+    {
+      "title": "2026年7月中国采购经理指数运行情况",
+      "url": "https://www.stats.gov.cn/zwfwck/sjfb/202607/t20260731_1964253.html",
+      "source": "国家统计局",
+      "published_at": "2026-07-31",
+      "retrieved_at": "2026-08-02T13:46:00+08:00",
+      "query": "2026年7月中国采购经理指数运行情况",
+      "applies_to": [
+        "market_regime",
+        "manufacturing",
+        "non_manufacturing"
+      ],
+      "evidence": "7月制造业PMI为49.2%，非制造业商务活动指数为49.0%，综合PMI产出指数为49.3%；制造业新订单指数为48.5%，短期景气和需求均较上月回落。"
+    },
+    {
+      "title": "九部门发文加强科技金融领域数据开发利用",
+      "url": "https://www.gov.cn/lianbo/202607/content_7076989.htm",
+      "source": "中国政府网",
+      "published_at": "2026-07-29",
+      "retrieved_at": "2026-08-02T13:47:00+08:00",
+      "query": "中国人民银行等九部门联合印发《关于加强科技金融领域数据开发利用的通知》",
+      "applies_to": [
+        "technology_finance",
+        "technology_companies",
+        "financial_services"
+      ],
+      "evidence": "九部门推动科技金融数据开放共享、科技企业数字信用画像和产业链金融资源匹配，对科技企业融资环境构成中长期支持。"
+    },
+    {
+      "title": "金融监管总局 中国人民银行 中国证监会 财政部关于健全金融机构治理的实施意见",
+      "url": "https://www.csrc.gov.cn/csrc/c100028/c7649076/content.shtml",
+      "source": "中国证券监督管理委员会",
+      "published_at": "2026-07-31",
+      "retrieved_at": "2026-08-02T13:48:00+08:00",
+      "query": "金融监管总局 中国人民银行 中国证监会 财政部关于健全金融机构治理的实施意见",
+      "applies_to": [
+        "financial_industry",
+        "banks",
+        "insurance",
+        "capital_markets"
+      ],
+      "evidence": "四部门要求金融机构强化治理、风险防控并服务实体经济；政策有利于长期稳健，但不形成明确的五日板块方向。"
+    }
+  ]
+}

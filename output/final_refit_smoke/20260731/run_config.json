@@ -1,0 +1,22 @@
+{
+  "split": {
+    "train_start": "2015-01-05",
+    "train_end": "2026-06-25",
+    "val_start": "2026-06-26",
+    "val_end": "2026-07-24",
+    "test_start": "2026-07-24",
+    "test_end": "2026-07-24",
+    "signal_date": "2026-07-31",
+    "train_label_end": "2026-07-24",
+    "test_proxy_date": "2026-07-24",
+    "buy_date": null,
+    "sell_date": null
+  },
+  "output_dir": "output\\final_refit_smoke\\20260731",
+  "model_dir": "model\\final_refit_smoke\\20260731",
+  "smoke": true,
+  "seeds": [
+    42
+  ],
+  "final_refit": true
+}

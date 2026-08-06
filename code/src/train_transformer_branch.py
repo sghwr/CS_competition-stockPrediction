@@ -35,6 +35,7 @@ from config import config
 from model import MacroTransformerV4, build_macro_features
 from paths import INTEGRATED_DIR, MODEL_INTEGRATED_DIR, TRAIN_CSV, DATA_DIR, INDEX_CSV
 from industry_mapping import load_industry_map
+from split_overrides import add_split_arguments, apply_split_overrides
 
 
 def set_seed(seed):
@@ -44,6 +45,30 @@ def set_seed(seed):
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+
+
+def train_macro_epoch(model, optimizer, huber_loss, train_X, train_alpha, train_beta):
+    model.train()
+    batch_size = 32
+    perm = torch.randperm(len(train_X), device=train_X.device)
+    total_loss = 0.0
+    n_batch = 0
+    for start in range(0, len(perm), batch_size):
+        idx = perm[start:start + batch_size]
+        ind_alpha_pred, ind_beta_pred = model(train_X[idx])
+        l_alpha = huber_loss(ind_alpha_pred, train_alpha[idx])
+        l_beta = huber_loss(ind_beta_pred, train_beta[idx])
+        pred_diff = ind_alpha_pred.unsqueeze(2) - ind_alpha_pred.unsqueeze(1)
+        true_diff = train_alpha[idx].unsqueeze(2) - train_alpha[idx].unsqueeze(1)
+        rank_loss = torch.mean(torch.clamp(-true_diff * pred_diff + 0.01, min=0))
+        loss = 0.4 * l_alpha + 0.4 * l_beta + 0.2 * rank_loss
+        optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        optimizer.step()
+        total_loss += loss.item()
+        n_batch += 1
+    return total_loss / max(n_batch, 1)
 
 
 def focal_loss(logits, targets, alpha=None, gamma=2.0):
@@ -158,15 +183,19 @@ def main():
     parser.add_argument('--output_dir', type=str, default=str(INTEGRATED_DIR / 'macro_transformer'),
                         help='推理产物目录 (predictions, meta)')
     parser.add_argument('--lr', type=float, default=3e-4)
+    parser.add_argument('--infer-batch-size', type=int, default=128)
     parser.add_argument('--smoke', action='store_true')
+    parser.add_argument('--final-refit', action='store_true')
+    add_split_arguments(parser)
     args = parser.parse_args()
+    split_cfg = apply_split_overrides(args, config)
 
     os.makedirs(args.model_dir, exist_ok=True)
     os.makedirs(args.output_dir, exist_ok=True)
     print(f"\n{'=' * 80}\n>>> [MacroIndustryAlphaBetaModel] starting\n", flush=True)
     print(f"[Config] max_epochs={args.epochs}, patience={args.patience}, seeds={args.seeds}, "
           f"lr={args.lr}, smoke={args.smoke}", flush=True)
-    print(f"[Config] val={config['val_start']} ~ {config['val_end']} (from config.SPLITS)", flush=True)
+    print(f"[Config] split={split_cfg}", flush=True)
     print(f"[Config] model_dir = {args.model_dir}", flush=True)
     print(f"[Config] output_dir = {args.output_dir}", flush=True)
 
@@ -207,11 +236,13 @@ def main():
     print(f"[Target] done in {time.time()-t0:.1f}s", flush=True)
 
     # 5. Train/val/test split by date (3 段)
+    train_start = pd.Timestamp(config['train_start'])
+    train_end = pd.Timestamp(config['train_end'])
     val_start = pd.Timestamp(config['val_start'])
     val_end = pd.Timestamp(config['val_end'])
     test_start = pd.Timestamp(config['test_start'])
     test_end = pd.Timestamp(config['test_end'])
-    train_mask = np.array([pd.Timestamp(d) < val_start for d in macro_dates])
+    train_mask = np.array([(train_start <= pd.Timestamp(d) <= train_end) for d in macro_dates])
     val_mask = np.array([(pd.Timestamp(d) >= val_start) & (pd.Timestamp(d) <= val_end)
                          for d in macro_dates])
     test_mask = np.array([(pd.Timestamp(d) >= test_start) & (pd.Timestamp(d) <= test_end)
@@ -251,6 +282,7 @@ def main():
 
         best_val_loss = float('inf')
         best_state = None
+        best_epoch = 0
         no_improve = 0
 
         train_X = X_all[train_mask].to(device)
@@ -301,6 +333,7 @@ def main():
 
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
+                best_epoch = epoch + 1
                 best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
                 no_improve = 0
                 torch.save(best_state, os.path.join(args.model_dir, f'best_seed{seed}.pth'))
@@ -310,13 +343,55 @@ def main():
                     print(f"[seed={seed}] early stop at epoch={epoch+1}, best={best_val_loss:.4f}", flush=True)
                     break
 
+        if args.final_refit:
+            refit_epochs = max(1, best_epoch)
+            refit_mask = train_mask | val_mask
+            refit_X = X_all[refit_mask].to(device)
+            refit_alpha = ind_alpha_t[refit_mask].to(device)
+            refit_beta = ind_beta_t[refit_mask].to(device)
+            set_seed(seed)
+            model = MacroTransformerV4(
+                n_channels=12, n_features=n_features, seq_len=60,
+                d_model=128, nhead=4, num_layers=3,
+                n_industries=len(industries), dropout=0.2,
+            ).to(device)
+            optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-3)
+            scheduler = LambdaLR(
+                optimizer,
+                lambda epoch: (epoch + 1) / 3 if epoch < 3 else
+                0.5 * (1 + np.cos(np.pi * (epoch - 3) / max(1, refit_epochs - 3))),
+            )
+            print(
+                f"[seed={seed}] final refit on train+val: {len(refit_X)} dates, "
+                f"epochs={refit_epochs}",
+                flush=True,
+            )
+            for refit_epoch in range(refit_epochs):
+                tr_loss = train_macro_epoch(
+                    model, optimizer, huber_loss, refit_X, refit_alpha, refit_beta,
+                )
+                scheduler.step()
+                print(
+                    f"[seed={seed} refit={refit_epoch + 1}/{refit_epochs}] tr={tr_loss:.4f}",
+                    flush=True,
+                )
+            best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+            torch.save(best_state, os.path.join(args.model_dir, f'best_seed{seed}.pth'))
+
         # Inference
         model.load_state_dict(best_state)
         model.eval()
+        alpha_chunks = []
+        beta_chunks = []
+        infer_batch = max(1, int(args.infer_batch_size))
         with torch.no_grad():
-            ind_alpha_pred, ind_beta_pred = model(X_all.to(device))
-        ind_alpha_all = ind_alpha_pred.cpu().numpy()
-        ind_beta_all = ind_beta_pred.cpu().numpy()
+            for start in range(0, len(X_all), infer_batch):
+                xb = X_all[start:start + infer_batch].to(device)
+                ind_alpha_pred, ind_beta_pred = model(xb)
+                alpha_chunks.append(ind_alpha_pred.cpu().numpy())
+                beta_chunks.append(ind_beta_pred.cpu().numpy())
+        ind_alpha_all = np.concatenate(alpha_chunks, axis=0)
+        ind_beta_all = np.concatenate(beta_chunks, axis=0)
 
         all_seed_preds.append({
             'dates': macro_dates,

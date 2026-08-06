@@ -185,7 +185,7 @@ def check_data_gaps(df, trade_dates):
     if not missing_dates:
         print("  数据完整性检查通过: 无缺失交易日")
         return
-    print(f"  ⚠ 警告: 发现 {len(missing_dates)} 个交易日数据缺失:")
+    print(f"  [WARN] 警告: 发现 {len(missing_dates)} 个交易日数据缺失:")
     groups = []
     current_group = [missing_dates[0]]
     for i in range(1, len(missing_dates)):
@@ -214,6 +214,7 @@ def _checkpoint_save(output_path, existing_df, all_new_data, stocks_to_replace):
         combined = pd.concat([existing_df, new_df], ignore_index=True)
     else:
         combined = new_df
+    combined = combined.drop_duplicates(subset=['股票代码', '日期'], keep='last')
     combined['日期_dt'] = pd.to_datetime(combined['日期'], errors='coerce')
     combined = combined.sort_values(['股票代码', '日期_dt']).reset_index(drop=True)
     combined = combined.drop(columns=['日期_dt'])
@@ -227,7 +228,7 @@ def main():
     os.makedirs(save_dir, exist_ok=True)
     
     start_date = "2015-01-01"
-    end_date = "2026-06-26"
+    end_date = datetime.now().strftime("%Y-%m-%d")
     
     output_path = os.path.join(save_dir, "stock_data.csv")
     
@@ -256,7 +257,9 @@ def main():
         # 获取交易日历用于缺口检测
         trade_calendar = get_trade_calendar(start_date, end_date)
         first_trade_date = trade_calendar[0] if trade_calendar else start_date
+        effective_end_date = trade_calendar[-1] if trade_calendar else end_date
         print(f"  交易日历: {start_date} ~ {end_date} 共 {len(trade_calendar)} 个交易日 (首个交易日: {first_trade_date})")
+        print(f"  有效截止交易日: {effective_end_date}")
         
         # 获取沪深300成分股
         hs300_df = get_hs300_stocks()
@@ -284,31 +287,47 @@ def main():
             pure_code = row.get('纯代码', '')
             
             existing_range = date_map.get(pure_code)
+            is_incremental = existing_range is not None
             
             if existing_range:
                 existing_min_date, existing_max_date = existing_range
-                need_late = existing_max_date < end_date
+                need_late = existing_max_date < effective_end_date
                 
                 if not need_late:
                     print(f"[{idx+1}/{total}] {bs_code} {stock_name} - 已完整 ({existing_min_date}~{existing_max_date}) 跳过")
                     continue
                 
-                # 需要追加近期数据，全量重新下载以保证后复权一致性
-                print(f"[{idx+1}/{total}] {bs_code} {stock_name} - 重新全量下载 (旧范围 {existing_min_date}~{existing_max_date})")
-                stocks_to_replace.add(pure_code)
+                fetch_start = existing_max_date
+                print(f"[{idx+1}/{total}] {bs_code} {stock_name} - 增量更新 ({existing_max_date}~{effective_end_date})")
             else:
+                fetch_start = start_date
                 print(f"[{idx+1}/{total}] {bs_code} {stock_name} - 全新获取")
             
             try:
-                stock_data = fetch_with_retry(bs_code, start_date, end_date)
+                stock_data = fetch_with_retry(bs_code, fetch_start, effective_end_date)
+
+                if is_incremental and stock_data is not None and not stock_data.empty:
+                    old_overlap = existing_df[
+                        (existing_df['股票代码'] == pure_code)
+                        & (existing_df['日期'].astype(str).str[:10] == existing_max_date)
+                    ]
+                    new_overlap = stock_data[stock_data['日期'] == existing_max_date]
+                    if not old_overlap.empty and not new_overlap.empty:
+                        old_close = float(old_overlap['收盘'].iloc[-1])
+                        new_close = float(new_overlap['收盘'].iloc[-1])
+                        tolerance = max(0.01, abs(old_close) * 1e-4)
+                        if abs(old_close - new_close) > tolerance:
+                            print("  [WARN] 后复权重叠日不一致，回退为全量替换")
+                            stock_data = fetch_with_retry(bs_code, start_date, effective_end_date)
+                            stocks_to_replace.add(pure_code)
                 
                 if stock_data is not None and not stock_data.empty:
                     all_new_data.append(stock_data)
                     total_new_records += len(stock_data)
                     success_count += 1
-                    if pure_code in stocks_to_replace:
+                    if is_incremental:
                         replaced_count += 1
-                        print(f"  [OK] 全量替换 {len(stock_data)}行 ({stock_data['日期'].iloc[0]}~{stock_data['日期'].iloc[-1]})")
+                        print(f"  [OK] 增量更新 {len(stock_data)}行 ({stock_data['日期'].iloc[0]}~{stock_data['日期'].iloc[-1]})")
                     else:
                         new_stock_count += 1
                         print(f"  [OK] +{len(stock_data)}行 ({stock_data['日期'].iloc[0]}~{stock_data['日期'].iloc[-1]})")
@@ -338,6 +357,7 @@ def main():
                     keep_mask = ~existing_df['股票代码'].astype(str).str.zfill(6).isin(stocks_to_replace)
                     existing_df = existing_df[keep_mask]
                 combined = pd.concat([existing_df, new_df], ignore_index=True)
+                combined = combined.drop_duplicates(subset=['股票代码', '日期'], keep='last')
                 combined['日期_dt'] = pd.to_datetime(combined['日期'], errors='coerce')
                 combined = combined.sort_values(['股票代码', '日期_dt']).reset_index(drop=True)
                 combined = combined.drop(columns=['日期_dt'])

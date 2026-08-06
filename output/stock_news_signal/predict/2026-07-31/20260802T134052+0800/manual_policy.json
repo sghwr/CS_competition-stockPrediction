@@ -1,0 +1,25 @@
+{
+  "enabled": false,
+  "top_k": 5,
+  "gross_exposure": 1.0,
+  "max_single_weight": 0.2,
+  "max_per_industry": 2,
+  "min_industries": 1,
+  "industry_prior": {},
+  "preferred_stocks": {},
+  "blocked_industries": [],
+  "blocked_stocks": [],
+  "leader_effect": {
+    "enabled": false,
+    "lookback_days": 5,
+    "top_leader_quantile": 0.8,
+    "bonus": 0.0,
+    "max_followers_per_industry": 2
+  },
+  "risk_filter": {
+    "avoid_extreme_5d_jump": false,
+    "extreme_5d_threshold": 0.12,
+    "volatility_penalty": 0.0,
+    "overheat_penalty": 0.0
+  }
+}

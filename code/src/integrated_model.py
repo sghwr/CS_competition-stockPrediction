@@ -35,6 +35,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from paths import TRAIN_CSV, MODEL_INTEGRATED_DIR
 from config import config
 from industry_mapping import load_industry_map
+from split_overrides import add_split_arguments, apply_split_overrides
 
 REGIME_NAMES = ['bear', 'sideways', 'bull']
 
@@ -68,6 +69,29 @@ def load_oof_npy(path):
     if not os.path.exists(path):
         raise FileNotFoundError(path)
     return np.load(path)
+
+
+def align_oof_dates(oof, source_meta_path, target_dates, label):
+    with open(source_meta_path, encoding='utf-8') as f:
+        source_dates = json.load(f)['dates']
+    if len(source_dates) != len(oof):
+        raise ValueError(
+            f"{label} rows/meta mismatch: {len(oof)} rows vs {len(source_dates)} dates"
+        )
+    target_dates = list(target_dates)
+    if source_dates == target_dates:
+        return oof
+    source_idx = {date: idx for idx, date in enumerate(source_dates)}
+    missing = [date for date in target_dates if date not in source_idx]
+    if missing:
+        raise ValueError(f"{label} missing target dates: {missing[:5]}")
+    aligned = np.stack([oof[source_idx[date]] for date in target_dates], axis=0)
+    print(
+        f"  [Align] {label}: {len(source_dates)} source dates -> "
+        f"{len(target_dates)} target dates",
+        flush=True,
+    )
+    return aligned
 
 
 def load_macro_pred(base_dir, fallback_macro_dir=None):
@@ -367,7 +391,10 @@ def main():
     parser.add_argument('--output_dir', type=str, default=None,
                         help='输出目录 (默认 = base_dir/ensemble)')
     parser.add_argument('--fallback_macro_dir', type=str, default=None)
+    parser.add_argument('--final-refit', action='store_true')
+    add_split_arguments(parser)
     args = parser.parse_args()
+    split_cfg = apply_split_overrides(args, config)
 
     if args.model_dir is None:
         args.model_dir = str(MODEL_INTEGRATED_DIR / 'ensemble')
@@ -375,6 +402,7 @@ def main():
         args.output_dir = os.path.join(args.base_dir, 'ensemble')
     os.makedirs(args.model_dir, exist_ok=True)
     os.makedirs(args.output_dir, exist_ok=True)
+    print(f"[Config] split={split_cfg}", flush=True)
 
     # 1. Load meta
     print("\n[Load] train_meta (10 年, 用于 stack 训练) ...", flush=True)
@@ -424,6 +452,16 @@ def main():
     print(f"  linear train files: {lin_train_files}, val files: {lin_val_files}, test files: {lin_test_files}", flush=True)
     if lin_train is None or lin_val is None or lin_test is None:
         raise FileNotFoundError("Linear OOF (train/val/test) not found")
+    linear_dir = os.path.join(args.base_dir, 'linear_regression')
+    lin_train = align_oof_dates(
+        lin_train, os.path.join(linear_dir, 'train_meta.json'), train_meta['dates'], 'linear train',
+    )
+    lin_val = align_oof_dates(
+        lin_val, os.path.join(linear_dir, 'val_meta.json'), val_meta['dates'], 'linear val',
+    )
+    lin_test = align_oof_dates(
+        lin_test, os.path.join(linear_dir, 'test_meta.json'), test_meta['dates'], 'linear test',
+    )
     print(f"  linear train: {lin_train.shape}, val: {lin_val.shape}, test: {lin_test.shape}", flush=True)
 
     all_stocks = sorted(pd.read_csv(TRAIN_CSV, encoding='utf-8-sig',
@@ -544,6 +582,22 @@ def main():
     val_mask_valid = ~np.isnan(y_val_flat)
     test_mask_valid = ~np.isnan(y_test_flat)
 
+    if args.final_refit:
+        fit_X_per_regime = {
+            r: np.concatenate([X_train_per_regime[r], X_val_per_regime[r]], axis=0)
+            for r in [0, 1, 2]
+        }
+        fit_y_flat = np.concatenate([y_train_flat, y_val_flat])
+        fit_regime_repeat = np.concatenate([train_regime_repeat, val_regime_repeat])
+        fit_mask_valid = ~np.isnan(fit_y_flat)
+        fit_period = 'TRAIN+VAL final refit'
+    else:
+        fit_X_per_regime = X_train_per_regime
+        fit_y_flat = y_train_flat
+        fit_regime_repeat = train_regime_repeat
+        fit_mask_valid = train_mask_valid
+        fit_period = 'TRAIN set'
+
     stack_models = {}
     train_preds = np.full(X_train_per_regime[1].shape[0], np.nan, dtype=np.float32)
     val_preds = np.full(X_val_per_regime[1].shape[0], np.nan, dtype=np.float32)
@@ -551,17 +605,17 @@ def main():
 
     for r in [0, 1, 2]:
         r_name = REGIME_NAMES[r]
-        train_mask_r = train_regime_repeat == r
-        train_mask_fit = train_mask_valid & train_mask_r
+        train_mask_r = fit_regime_repeat == r
+        train_mask_fit = fit_mask_valid & train_mask_r
         n_train_r = train_mask_fit.sum()
 
         if n_train_r < 100:
             print(f"  [WARN] {r_name}: only {n_train_r} train samples, skip (use sideways fallback)")
             continue
 
-        X_fit_r = X_train_per_regime[r][train_mask_fit]
-        y_fit_r = y_train_flat[train_mask_fit]
-        print(f"  [{r_name}] train samples: {len(y_fit_r):,} (TRAIN set), "
+        X_fit_r = fit_X_per_regime[r][train_mask_fit]
+        y_fit_r = fit_y_flat[train_mask_fit]
+        print(f"  [{r_name}] train samples: {len(y_fit_r):,} ({fit_period}), "
               f"features: {STACK_FEATURES_PER_REGIME[r]}", flush=True)
 
         model_r = lgb.LGBMRegressor(
@@ -577,7 +631,7 @@ def main():
         stack_models[r] = model_r
 
         # predict on train (in-sample)
-        train_mask_r_all = train_mask_r
+        train_mask_r_all = train_regime_repeat == r
         if train_mask_r_all.sum() > 0:
             train_preds[train_mask_r_all] = model_r.predict(X_train_per_regime[r][train_mask_r_all])
         # predict on val (OOS)
@@ -674,6 +728,7 @@ def main():
         'train_ic': train_ic,
         'val_ic': val_ic,
         'test_ic': test_ic,
+        'final_refit': args.final_refit,
         'per_component_test_ic': {'routed_tree': tree_ic, 'linear': lin_ic, 'macro': macro_ic},
         'splits': config['train_start'] + ' ~ ' + config['train_end'] + ' (train 10 年), ' +
                   config['val_start'] + ' ~ ' + config['val_end'] + ' (val 6 月), ' +

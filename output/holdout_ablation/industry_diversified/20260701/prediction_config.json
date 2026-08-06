@@ -1,0 +1,7 @@
+{
+  "signal_date": "2026-07-01",
+  "base_dir": "output\\holdout_models\\20260701",
+  "model_dir": "model\\holdout_models\\20260701",
+  "selection": "industry_diversified",
+  "manual_enabled": false
+}

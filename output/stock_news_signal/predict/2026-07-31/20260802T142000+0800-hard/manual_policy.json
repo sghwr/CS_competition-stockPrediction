@@ -1,0 +1,35 @@
+{
+  "enabled": true,
+  "top_k": 5,
+  "gross_exposure": 1.0,
+  "max_single_weight": 0.2,
+  "max_per_industry": 2,
+  "min_industries": 1,
+  "industry_prior": {
+    "C39计算机、通信和其他电子设备制造业": 0.0015,
+    "I65软件和信息技术服务业": 0.0015,
+    "M73研究和试验发展": 0.001,
+    "C31黑色金属冶炼和压延加工业": -0.0015,
+    "C30非金属矿物制品业": -0.0015,
+    "C34通用设备制造业": -0.001,
+    "C35专用设备制造业": -0.001,
+    "E48土木工程建筑业": -0.0015,
+    "K70房地产业": -0.0015
+  },
+  "preferred_stocks": {},
+  "blocked_industries": [],
+  "blocked_stocks": [],
+  "leader_effect": {
+    "enabled": true,
+    "lookback_days": 5,
+    "top_leader_quantile": 0.8,
+    "bonus": 0.00075,
+    "max_followers_per_industry": 2
+  },
+  "risk_filter": {
+    "avoid_extreme_5d_jump": true,
+    "extreme_5d_threshold": 0.12,
+    "volatility_penalty": 0.04,
+    "overheat_penalty": 0.02
+  }
+}

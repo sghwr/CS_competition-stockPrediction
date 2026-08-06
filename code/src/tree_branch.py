@@ -28,6 +28,7 @@ from utils import (
  )
 from industry_mapping import load_industry_map
 from paths import INTEGRATED_DIR, MODEL_INTEGRATED_DIR, TRAIN_CSV
+from split_overrides import add_split_arguments, apply_split_overrides
 
 
 def add_industry_features(df, industry_map):
@@ -95,7 +96,8 @@ def add_industry_features(df, industry_map):
     return df
 
 
-def split_train_val(df, val_start=None, val_end=None, test_start=None, test_end=None, seq_len=60):
+def split_train_val(df, train_start=None, train_end=None, val_start=None, val_end=None,
+                    test_start=None, test_end=None, seq_len=60):
     """按 config.SPLITS 切分: train + val (9月, 早停+stack) + test (3月, strict OOS).
 
     Args:
@@ -109,22 +111,29 @@ def split_train_val(df, val_start=None, val_end=None, test_start=None, test_end=
     df = df.sort_values(['日期', '股票代码']).reset_index(drop=True)
     if val_start is None:
         val_start = config['val_start']
+    if train_start is None:
+        train_start = config['train_start']
+    if train_end is None:
+        train_end = config['train_end']
     if val_end is None:
         val_end = config['val_end']
     if test_start is None:
         test_start = config['test_start']
     if test_end is None:
         test_end = config['test_end']
+    train_start_dt = pd.Timestamp(train_start)
+    train_end_dt = pd.Timestamp(train_end)
     val_start_dt = pd.Timestamp(val_start)
     val_end_dt = pd.Timestamp(val_end)
     test_start_dt = pd.Timestamp(test_start)
     test_end_dt = pd.Timestamp(test_end)
     val_context_start = val_start_dt - pd.tseries.offsets.BDay(seq_len - 1)
     # train: 全部 < val_start (不含 val)
-    train_df = df[df['日期'] < val_start_dt].copy()
+    train_df = df[(df['日期'] >= train_start_dt) & (df['日期'] <= train_end_dt)].copy()
     # val + test context: 用于 early stop 和 OOF 评估
     val_df = df[(df['日期'] >= val_context_start) & (df['日期'] <= test_end_dt + pd.tseries.offsets.BDay(5))].copy()
-    print(f"[Split] train: {train_df['日期'].min().date()} -> {train_df['日期'].max().date()}", flush=True)
+    print(f"[Split] train: {train_start_dt.date()} -> {train_end_dt.date()} "
+          f"({train_df['日期'].min().date()} -> {train_df['日期'].max().date()})", flush=True)
     print(f"[Split] val: {val_start_dt.date()} -> {val_end_dt.date()}", flush=True)
     print(f"[Split] test: {test_start_dt.date()} -> {test_end_dt.date()}", flush=True)
     print(f"[Split] val+test context (含 60d): {val_df['日期'].min().date()} -> {val_df['日期'].max().date()}", flush=True)
@@ -237,14 +246,16 @@ def main():
     parser.add_argument('--val_meta_path', type=str, default=None,
                         help='val_meta.json 路径 (默认: 自动从 sibling transformer/val_meta.json 查找)')
     parser.add_argument('--smoke', action='store_true', help='冒烟测试: 仅用 30 只股票 + 1/10 数据')
+    parser.add_argument('--final-refit', action='store_true')
+    add_split_arguments(parser)
     args = parser.parse_args()
+    split_cfg = apply_split_overrides(args, config)
     os.makedirs(args.model_dir, exist_ok=True)
     os.makedirs(args.output_dir, exist_ok=True)
 
     print(f"\n{'=' * 80}\n>>> [LightGBM] starting\n", flush=True)
     print(f"[Config] model_dir={args.model_dir}", flush=True)
-    print(f"[Config] output_dir={args.output_dir}, smoke={args.smoke}, "
-          f"val={config['val_start']}~{config['val_end']} (from config.SPLITS)", flush=True)
+    print(f"[Config] output_dir={args.output_dir}, smoke={args.smoke}, split={split_cfg}", flush=True)
 
     # 数据
     df = pd.read_csv(TRAIN_CSV)
@@ -259,7 +270,8 @@ def main():
         print(f"[Smoke] {len(df):,} rows, {df['股票代码'].nunique()} stocks, {df['日期'].nunique()} dates")
 
     train_df_raw, val_df_raw, val_start = split_train_val(
-        df, val_start=config['val_start'], val_end=config['val_end'],
+        df, train_start=config['train_start'], train_end=config['train_end'],
+        val_start=config['val_start'], val_end=config['val_end'],
         test_start=config['test_start'], test_end=config['test_end'],
     )
     all_stocks = sorted(df['股票代码'].unique())
@@ -353,7 +365,9 @@ def main():
     val_end_str = pd.Timestamp(config['val_end']).strftime('%Y-%m-%d')
     test_start_str = pd.Timestamp(config['test_start']).strftime('%Y-%m-%d')
     test_end_str = pd.Timestamp(config['test_end']).strftime('%Y-%m-%d')
-    train_mask = dates_arr < val_start_str
+    train_start_str = pd.Timestamp(config['train_start']).strftime('%Y-%m-%d')
+    train_end_str = pd.Timestamp(config['train_end']).strftime('%Y-%m-%d')
+    train_mask = (dates_arr >= train_start_str) & (dates_arr <= train_end_str)
     val_mask = (dates_arr >= val_start_str) & (dates_arr <= val_end_str)
     val_mask = np.isin(dates_arr, list(val_target_dates))
     print(f"[Split] train: {train_mask.sum():,}, val: {val_mask.sum():,}", flush=True)
@@ -544,6 +558,30 @@ def main():
             valid_sets=valid_sets, valid_names=valid_names, callbacks=callbacks,
         )
         print(f"[Tree_{r_name}] done in {time.time()-t0:.1f}s, best_iter={model_r.best_iteration}", flush=True)
+
+        if args.final_refit:
+            best_rounds = model_r.best_iteration or 200
+            refit_mask = regime_r_mask | regime_r_eval_mask
+            refit_dates = dates_arr[refit_mask]
+            refit_groups = pd.Series(refit_dates).value_counts(sort=False).sort_index().values
+            refit_data = lgb.Dataset(
+                feats_arr[refit_mask], label=labels_arr[refit_mask], group=refit_groups,
+                feature_name=feature_names, categorical_feature=cat_features,
+                free_raw_data=False,
+            )
+            print(
+                f"[Tree_{r_name}] final refit on train+val: "
+                f"{refit_mask.sum():,} samples, rounds={best_rounds}",
+                flush=True,
+            )
+            model_r = lgb.train(
+                params,
+                refit_data,
+                num_boost_round=best_rounds,
+                valid_sets=[refit_data],
+                valid_names=['refit'],
+                callbacks=[lgb.log_evaluation(period=0)],
+            )
 
         # 保存 model
         model_r.save_model(os.path.join(args.model_dir, f'model_{r_name}.txt'))

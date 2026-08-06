@@ -1,0 +1,4 @@
+interface:
+  display_name: "股票新闻信号工作流"
+  short_description: "按严格时间截断更新行情、检索新闻并生成或回测T+5信号"
+  default_prompt: "Use $update-stock-news-signal to run a leakage-safe stock news and T+5 signal workflow for the date range I provide."
